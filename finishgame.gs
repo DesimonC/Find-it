@@ -125,6 +125,44 @@ try {
 
 /* =================================================
 
+/* =================================================
+
+KEEP ONLY THE OVERALL WINNING PHOTO
+
+================================================= */
+
+
+const photoCleanup =
+
+trashGamePhotosExceptWinner(
+
+gameCode,
+
+winningPhotoId
+
+);
+
+
+if (!photoCleanup.success) {
+
+throw new Error(
+
+photoCleanup.error ||
+
+"Unable to clean up game photos."
+
+);
+
+}
+
+
+photosDeleted =
+
+photoCleanup.deletedCount;
+
+
+/* =================================================
+
 DELETE GAME PHOTOS
 
 ================================================= */
@@ -264,7 +302,7 @@ deleted,
 
 keptPhotoId:
 
-"",
+winningPhotoId,
 
 
 photosDeleted:
@@ -307,171 +345,6 @@ String(error)
 lock.releaseLock();
 
 }
-
-}
-
-
-
-/* =========================================================
-
-DELETE ALL PHOTOS FOR GAME
-
-========================================================= */
-
-
-function deleteGamePhotos(gameCode) {
-
-
-let deletedCount = 0;
-
-
-
-const folderIterator =
-
-DriveApp
-
-.getFoldersByName(
-
-"Find It Photos"
-
-);
-
-
-
-if (!folderIterator.hasNext()) {
-
-
-console.log(
-
-"Find It Photos folder not found."
-
-);
-
-
-return 0;
-
-}
-
-
-
-const folder =
-
-folderIterator.next();
-
-
-
-const files =
-
-folder.getFiles();
-
-
-
-while (files.hasNext()) {
-
-
-const file =
-
-files.next();
-
-
-try {
-
-
-const description =
-
-String(
-
-file.getDescription() ||
-
-""
-
-);
-
-
-
-/*
-
-* Files created by Find It! have their
-
-* game information stored in the
-
-* description when available.
-
-*
-
-* Also check filename.
-
-*/
-
-
-const name =
-
-String(
-
-file.getName() ||
-
-""
-
-);
-
-
-
-if (
-
-description
-
-.indexOf(gameCode) !== -1
-
-||
-
-name
-
-.indexOf(gameCode) !== -1
-
-) {
-
-
-file.setTrashed(true);
-
-
-deletedCount++;
-
-
-continue;
-
-}
-
-
-
-/*
-
-* If the file cannot be matched from
-
-* metadata/name, leave it alone.
-
-*/
-
-
-} catch (error) {
-
-
-console.warn(
-
-"Could not delete file:",
-
-file.getId(),
-
-error
-
-);
-
-}
-
-}
-
-
-
-return deletedCount;
 
 }
 
