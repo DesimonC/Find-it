@@ -22,6 +22,22 @@
     href="style.css"
     >
 
+    <!-- ==================================================
+         SCREEN STACK SAFETY
+         Keep inactive screens completely out of the page.
+         This protects the app if the external stylesheet is
+         missing, cached incorrectly, or fails to load.
+         ================================================== -->
+    <style>
+        section.screen {
+            display: none !important;
+        }
+
+        section.screen.active {
+            display: block !important;
+        }
+    </style>
+
 </head>
 
 
