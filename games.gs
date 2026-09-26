@@ -69,7 +69,11 @@ throw new Error(
 
 
 
-if (\n\n!Number.isInteger(categoryCount) ||\n\ncategoryCount < 1 ||\n\ncategoryCount > 10\n\n) {
+if (
+  !Number.isInteger(categoryCount) ||
+  categoryCount < 1 ||
+  categoryCount > 10
+) {
 
 
 throw new Error(
@@ -1195,130 +1199,6 @@ return null;
 
 /* =========================================================
 
-GET PLAYERS
-
-Returns all players for a game.
-
-Host is included because the host is a real player.
-
-========================================================= */
-
-
-function getPlayers(gameCode) {
-
-
-gameCode =
-
-String(
-
-gameCode || ""
-
-)
-
-.trim()
-
-.toUpperCase();
-
-
-console.log(
-
-"================================="
-
-);
-
-
-console.log(
-
-"GET PLAYERS"
-
-);
-
-
-console.log(
-
-"GAME CODE:",
-
-gameCode
-
-);
-
-
-console.log(
-
-"================================="
-
-);
-
-
-if (!gameCode) {
-
-
-return {
-
-success: false,
-
-error:
-
-"Game code is required.",
-
-players: []
-
-};
-
-}
-
-
-const result =
-
-findPlayers(
-
-gameCode
-
-);
-
-
-const players =
-
-result &&
-
-Array.isArray(
-
-result.players
-
-)
-
-? result.players
-
-: [];
-
-
-console.log(
-
-"PLAYERS FOUND:",
-
-players.length
-
-);
-
-
-return {
-
-success: true,
-
-gameCode:
-
-gameCode,
-
-players:
-
-players
-
-};
-
-}
-
-/* =========================================================
-
 START GAME
 
 
@@ -1773,7 +1653,12 @@ categoryCount || 0
 
 
 
-if (\n\n!gameCode ||\n\n!Number.isInteger(categoryCount) ||\n\ncategoryCount < 1 ||\n\ncategoryCount > 10\n\n) {
+if (
+  !gameCode ||
+  !Number.isInteger(categoryCount) ||
+  categoryCount < 1 ||
+  categoryCount > 10
+) {
 
 
 throw new Error(
