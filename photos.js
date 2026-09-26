@@ -736,15 +736,31 @@ function openPhotoUpload(
        photos.js becomes the single owner of the upload UI.
     ----------------------------------------------------- */
 
-    if (category) {
-
-        selectedPhotoCategory =
-            category;
+    if (!category) {
+        console.error("PHOTOS: openPhotoUpload received no challenge.");
+        setPhotoMessage("Challenge information is missing.");
+        return;
     }
 
+    // The category passed by the clicked card is authoritative.
+    // Do not allow an older localStorage/current-category value to win.
+    selectedPhotoCategory =
+        category;
+
+    try {
+        localStorage.setItem(
+            "findItCurrentCategory",
+            JSON.stringify(category)
+        );
+    } catch (error) {
+        console.warn(
+            "PHOTOS: Could not persist selected challenge:",
+            error
+        );
+    }
 
     const currentCategory =
-        getPhotoCategory();
+        selectedPhotoCategory;
 
 
     if (!currentCategory) {
@@ -2598,3 +2614,8 @@ window.getPhotoPlayer =
 /* =========================================================
    END PHOTOS.JS
 ========================================================= */
+
+/* =========================================================
+   PUBLIC PLAYER -> PHOTO HANDOFF
+========================================================= */
+window.openPhotoUpload = openPhotoUpload;
