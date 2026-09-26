@@ -314,6 +314,54 @@ function clearHostRuntime() {
     hostGame = null;
     hostGameCode = "";
     hostPlayer = null;
+
+    /*
+       HOST always starts a completely fresh game session.
+       Clear old game/player/category session state, but
+       deliberately keep the saved winning splash photo.
+    */
+
+    try {
+
+        localStorage.removeItem(
+            "findItGame"
+        );
+
+        localStorage.removeItem(
+            "findItHostGame"
+        );
+
+        localStorage.removeItem(
+            "findItGameCode"
+        );
+
+        localStorage.removeItem(
+            "gameCode"
+        );
+
+        localStorage.removeItem(
+            "GameCode"
+        );
+
+        localStorage.removeItem(
+            "findItCurrentPlayer"
+        );
+
+        localStorage.removeItem(
+            "findItPlayer"
+        );
+
+        localStorage.removeItem(
+            "findItCurrentCategory"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "HOST: Could not clear previous session state:",
+            error
+        );
+    }
 }
 
 
