@@ -3987,437 +3987,108 @@ Keeps ONLY the selected overall winning photo.
 
 function cleanupGamePhotos(data) {
 
-
-data =
-
-data || {};
-
-
+data = data || {};
 
 const gameCode =
-
-String(
-
-data.gameCode || ""
-
-)
-
-.trim()
-
-.toUpperCase();
-
-
+String(data.gameCode || "").trim().toUpperCase();
 
 const winningPhotoId =
-
-String(
-
-data.winningPhotoId ||
-
-data.photoId ||
-
-""
-
-).trim();
-
-
+String(data.winningPhotoId || data.photoId || "").trim();
 
 if (!gameCode) {
-
-
-return {
-
-success: false,
-
-error:
-
-"Game code is required."
-
-};
-
-
+return { success: false, error: "Game code is required." };
 }
-
-
 
 if (!winningPhotoId) {
-
-
-return {
-
-success: false,
-
-error:
-
-"Winning photo ID is required."
-
-};
-
-
+return { success: false, error: "Winning photo ID is required." };
 }
 
-
-
-const entries =
-
-getRawEntriesForGame(
-
-gameCode
-
-);
-
-
-
-if (
-
-!entries ||
-
-entries.length === 0
-
-) {
-
-
-return {
-
-
-success:
-
-true,
-
-
-gameCode:
-
-gameCode,
-
-
-keptPhotoId:
-
-winningPhotoId,
-
-
-deletedCount:
-
-0,
-
-
-message:
-
-"No photos found for this game."
-
-
-};
-
-
-}
-
-
-
-const photoIds =
-
-{};
-
-
-
-entries.forEach(
-
-entry => {
-
-
-const photoId =
-
-String(
-
-entry.photoId || ""
-
-).trim();
-
-
-
-if (photoId) {
-
-
-photoIds[
-
-photoId
-
-] = true;
-
-
-}
-
-
-}
-
-);
-
-
-
-if (
-
-!photoIds[
-
-winningPhotoId
-
-]
-
-) {
-
-
-return {
-
-
-success:
-
-false,
-
-
-error:
-
-"The winning photo does not belong to this game. No photos were deleted."
-
-
-};
-
-
-}
-
-
-
-const lock =
-
-LockService.getScriptLock();
-
-
+const lock = LockService.getScriptLock();
 
 try {
-
-
 lock.waitLock(30000);
-
-
-
-let deletedCount =
-
-0;
-
-
-let keptCount =
-
-0;
-
-
-const errors =
-
-[];
-
-
-
-Object.keys(
-
-photoIds
-
-).forEach(
-
-photoId => {
-
-
-if (
-
-photoId ===
-
-winningPhotoId
-
-) {
-
-
-keptCount++;
-
-
-console.log(
-
-"KEEPING WINNING PHOTO:",
-
-photoId
-
-);
-
-
-return;
-
+return trashGamePhotosExceptWinner(gameCode, winningPhotoId);
+} finally {
+try { lock.releaseLock(); } catch (error) {}
+}
 
 }
 
 
+/* =========================================================
+   TRASH GAME PHOTOS EXCEPT WINNER
+   Caller must already hold the script lock.
+========================================================= */
+
+function trashGamePhotosExceptWinner(gameCode, winningPhotoId) {
+
+const entries = getRawEntriesForGame(gameCode);
+
+if (!entries || entries.length === 0) {
+return {
+success: true,
+gameCode: gameCode,
+keptPhotoId: winningPhotoId,
+deletedCount: 0,
+keptCount: 0,
+errors: [],
+message: "No photos found for this game."
+};
+}
+
+const photoIds = {};
+
+entries.forEach(function(entry) {
+const photoId = String(entry.photoId || "").trim();
+if (photoId) photoIds[photoId] = true;
+});
+
+if (!photoIds[winningPhotoId]) {
+return {
+success: false,
+gameCode: gameCode,
+keptPhotoId: "",
+deletedCount: 0,
+keptCount: 0,
+errors: [],
+error: "The winning photo does not belong to this game. No photos were deleted."
+};
+}
+
+let deletedCount = 0;
+let keptCount = 0;
+const errors = [];
+
+Object.keys(photoIds).forEach(function(photoId) {
+if (photoId === winningPhotoId) {
+keptCount++;
+console.log("KEEPING WINNING PHOTO:", photoId);
+return;
+}
 
 try {
-
-
-const file =
-
-DriveApp.getFileById(
-
-photoId
-
-);
-
-
-
-file.setTrashed(
-
-true
-
-);
-
-
-
+DriveApp.getFileById(photoId).setTrashed(true);
 deletedCount++;
-
-
-
-console.log(
-
-"TRASHED GAME PHOTO:",
-
-photoId
-
-);
-
-
-
+console.log("TRASHED GAME PHOTO:", photoId);
 } catch (error) {
-
-
 const message =
-
-"Unable to trash photo " +
-
-photoId +
-
-": " +
-
-error.message;
-
-
-
-errors.push(
-
-message
-
-);
-
-
-
-console.log(
-
-message
-
-);
-
-
+"Unable to trash photo " + photoId + ": " +
+(error.message || String(error));
+errors.push(message);
+console.log(message);
 }
-
-
-}
-
-);
-
-
-
-console.log(
-
-"GAME PHOTO CLEANUP COMPLETE:",
-
-{
-
-gameCode:
-
-gameCode,
-
-
-winningPhotoId:
-
-winningPhotoId,
-
-
-deletedCount:
-
-deletedCount,
-
-
-keptCount:
-
-keptCount,
-
-
-errors:
-
-errors
-
-
-}
-
-);
-
-
+});
 
 return {
-
-
-success:
-
-errors.length === 0,
-
-
-gameCode:
-
-gameCode,
-
-
-keptPhotoId:
-
-winningPhotoId,
-
-
-deletedCount:
-
-deletedCount,
-
-
-keptCount:
-
-keptCount,
-
-
-errors:
-
-errors,
-
-
-message:
-
-errors.length === 0
-
+success: errors.length === 0,
+gameCode: gameCode,
+keptPhotoId: winningPhotoId,
+deletedCount: deletedCount,
+keptCount: keptCount,
+errors: errors,
+message: errors.length === 0
 ? "All non-winning game photos were deleted."
-
 : "Game cleanup completed with some errors."
-
-
 };
 
-
-
-} finally {
-
-
-try {
-
-lock.releaseLock();
-
-} catch (error) {}
-
-
 }
-
-
-}
-
