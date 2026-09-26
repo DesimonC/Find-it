@@ -1122,6 +1122,102 @@
 
 
     <!-- ==================================================
+        HOST BUTTON SAFETY BINDING
+        This runs after every application script so the
+        HOST button can never depend on script load order.
+        The winning splash photo is intentionally preserved.
+        ================================================== -->
+
+    <script>
+
+        (function () {
+
+            function bindHostButton() {
+
+                const button =
+                    document.getElementById("hostButton");
+
+                if (!button) {
+                    return;
+                }
+
+                button.onclick = function (event) {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    console.log(
+                        "HOST: Direct safety binding activated."
+                    );
+
+                    if (
+                        typeof window.initialiseHost ===
+                        "function"
+                    ) {
+
+                        window.initialiseHost();
+                        return;
+                    }
+
+                    console.warn(
+                        "HOST: initialiseHost() unavailable; opening setup directly."
+                    );
+
+                    [
+                        "findItGame",
+                        "findItHostGame",
+                        "findItGameCode",
+                        "gameCode",
+                        "GameCode",
+                        "findItCurrentPlayer",
+                        "findItPlayer",
+                        "findItCurrentCategory"
+                    ].forEach(function (key) {
+
+                        localStorage.removeItem(key);
+
+                    });
+
+                    if (
+                        typeof window.showScreen ===
+                        "function"
+                    ) {
+
+                        window.showScreen(
+                            "hostSetupScreen"
+                        );
+
+                    }
+
+                };
+
+                console.log(
+                    "HOST: Direct safety binding installed."
+                );
+            }
+
+            if (
+                document.readyState ===
+                "loading"
+            ) {
+
+                document.addEventListener(
+                    "DOMContentLoaded",
+                    bindHostButton
+                );
+
+            } else {
+
+                bindHostButton();
+
+            }
+
+        })();
+
+    </script>
+
+
+    <!-- ==================================================
         SPLASH BACKGROUND
         ================================================== -->
 
