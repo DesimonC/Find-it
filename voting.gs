@@ -3550,12 +3550,9 @@ function getOrCreateVotesSheet() {
 
 
 let sheet =
-
-getSheet(
-
-VOTES_SHEET
-
-);
+  SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(VOTES_SHEET);
 
 
 if (!sheet) {
