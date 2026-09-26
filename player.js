@@ -1639,7 +1639,8 @@ function openPlayerCategory(
 
 
     /* -----------------------------------------------------
-       1. Save challenge in player.js
+       1. Save the selected challenge in player.js.
+       This is the persistent player-side selection.
     ----------------------------------------------------- */
 
     setPlayerCurrentCategory(
@@ -1648,27 +1649,8 @@ function openPlayerCategory(
 
 
     /* -----------------------------------------------------
-       2. Reset photos.js FIRST
-    ----------------------------------------------------- */
-
-    if (
-        typeof window.resetPhotoUpload ===
-        "function"
-    ) {
-
-        window.resetPhotoUpload();
-
-    } else if (
-        typeof window.resetPhotoUI ===
-        "function"
-    ) {
-
-        window.resetPhotoUI();
-    }
-
-
-    /* -----------------------------------------------------
-       3. Give the challenge to photos.js
+       2. Hand the selected challenge to photos.js.
+       photos.js owns the photo-upload screen and controls.
     ----------------------------------------------------- */
 
     if (
@@ -1682,14 +1664,16 @@ function openPlayerCategory(
 
     } else {
 
-        console.warn(
-            "PLAYER: setPhotoCategory() not found."
+        console.error(
+            "PLAYER: setPhotoCategory() is unavailable."
         );
+
+        return;
     }
 
 
     /* -----------------------------------------------------
-       4. Update challenge information
+       3. Update the challenge heading immediately.
     ----------------------------------------------------- */
 
     updatePlayerPhotoChallenge(
@@ -1698,52 +1682,36 @@ function openPlayerCategory(
 
 
     /* -----------------------------------------------------
-       5. Move to PHOTO UPLOAD immediately.
+       4. Let photos.js own the hand-off to the upload
+          screen. Do NOT start the camera here.
 
-       The player controller owns the screen transition.
-       photos.js then prepares the camera/photo controls.
-       This prevents the collection screen from remaining
-       visible if photos.js has a load/binding problem.
+       The old flow called resetPhotoUpload(),
+       showScreen(), openPhotoUpload(), and then
+       startPhotoCamera() from player.js. That duplicated
+       screen/UI ownership and could make the challenge
+       appear not to change.
+
+       The player selects the challenge; photos.js opens
+       the upload screen and the player then chooses
+       Take Photo or Choose Photo.
     ----------------------------------------------------- */
 
-    if (typeof window.showScreen === "function") {
-        window.showScreen("photoUploadScreen");
-    } else {
-        console.error("PLAYER: showScreen() is unavailable.");
-        return;
-    }
+    if (
+        typeof window.openPhotoUpload ===
+        "function"
+    ) {
 
-    if (typeof window.openPhotoUpload === "function") {
-        window.openPhotoUpload(category);
+        window.openPhotoUpload(
+            category
+        );
+
     } else {
+
         console.error(
             "PLAYER: openPhotoUpload() is unavailable."
         );
+
         return;
-    }
-
-    /* -----------------------------------------------------
-       6. Hand the challenge directly to the camera.
-       This call is still made from the original challenge
-       card click, so the browser can present its camera
-       permission prompt without losing the user gesture.
-    ----------------------------------------------------- */
-
-    if (typeof window.startPhotoCamera === "function") {
-        console.log(
-            "PLAYER: Handing challenge directly to camera."
-        );
-
-        window.startPhotoCamera().catch(function(error) {
-            console.error(
-                "PLAYER: Camera handoff failed:",
-                error
-            );
-        });
-    } else {
-        console.error(
-            "PLAYER: startPhotoCamera() is unavailable."
-        );
     }
 
 
@@ -1751,7 +1719,6 @@ function openPlayerCategory(
         "PLAYER: Photo challenge screen ready."
     );
 }
-
 
 /* =========================================================
    OPEN COLLECTION
