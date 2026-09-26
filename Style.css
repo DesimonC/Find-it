@@ -1,0 +1,1428 @@
+/* =========================================================
+   FIND IT!
+   COMPLETE CSS
+   MOBILE FIRST
+   COLOUR + CLEAR BUTTONS + CATEGORY CARDS
+========================================================= */
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #111;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+}
+
+
+/* =========================================================
+   APP
+========================================================= */
+
+#app {
+    width: 100%;
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   SCREENS
+========================================================= */
+
+.screen {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+    padding: 10px 10px 25px;
+    overflow-x: hidden;
+}
+
+.screen.active {
+    display: block;
+}
+
+
+/* =========================================================
+   MAIN CONTAINERS
+========================================================= */
+
+.app-container,
+.container,
+.game-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADINGS
+========================================================= */
+
+h1 {
+    margin: 6px 0 8px;
+    font-size: clamp(26px, 6vw, 40px);
+    line-height: 1.1;
+}
+
+h2 {
+    margin: 6px 0 8px;
+    font-size: clamp(20px, 5vw, 30px);
+}
+
+h3 {
+    margin: 5px 0 7px;
+    font-size: 19px;
+}
+
+
+/* =========================================================
+   TEXT
+========================================================= */
+
+p {
+    margin: 5px 0 8px;
+    line-height: 1.35;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+button,
+.button,
+.btn {
+    min-height: 42px;
+
+    padding: 9px 14px;
+
+    border: 2px solid transparent;
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.15;
+
+    cursor: pointer;
+
+    transition:
+        transform .1s ease,
+        opacity .1s ease,
+        background .15s ease,
+        border-color .15s ease,
+        box-shadow .15s ease;
+}
+
+button:hover,
+.button:hover,
+.btn:hover {
+    opacity: .95;
+}
+
+button:active,
+.button:active,
+.btn:active {
+    transform: scale(.97);
+}
+
+button:disabled,
+.button:disabled,
+.btn:disabled {
+    opacity: .45;
+    cursor: default;
+    transform: none;
+}
+
+
+/* =========================================================
+   CLEAR BUTTON TYPES
+========================================================= */
+
+.primary-button {
+    background: #00c853;
+    color: #fff;
+
+    border-color: #00e676;
+
+    box-shadow:
+        0 3px 8px rgba(0, 200, 83, .3);
+}
+
+.primary-button:hover {
+    background: #00b248;
+}
+
+
+.secondary-button {
+    background: #2979ff;
+    color: #fff;
+
+    border-color: #448aff;
+
+    box-shadow:
+        0 3px 8px rgba(41, 121, 255, .3);
+}
+
+.secondary-button:hover {
+    background: #1565c0;
+}
+
+
+.danger-small-button {
+    background: #d50000;
+    color: #fff;
+
+    border-color: #ff1744;
+
+    box-shadow:
+        0 3px 8px rgba(213, 0, 0, .3);
+}
+
+
+.large-button {
+    width: 100%;
+    min-height: 48px;
+
+    font-size: 15px;
+}
+
+
+.small-button {
+    min-height: 38px;
+
+    padding: 8px 12px;
+
+    font-size: 13px;
+}
+
+
+.text-button {
+    background: #333;
+    color: #fff;
+
+    border: 2px solid #666;
+
+    padding: 9px 12px;
+}
+
+.text-button:hover {
+    background: #444;
+    border-color: #888;
+}
+
+
+.back-button {
+    background: #333;
+    color: #fff;
+
+    border: 2px solid #666;
+
+    font-size: 24px;
+
+    min-width: 44px;
+    min-height: 42px;
+
+    padding: 4px 8px;
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+input,
+select,
+textarea {
+    width: 100%;
+    min-height: 42px;
+
+    padding: 9px 11px;
+
+    border: 2px solid #666;
+    border-radius: 10px;
+
+    background: #fff;
+    color: #111;
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+
+    border-color: #2979ff;
+
+    box-shadow:
+        0 0 0 3px rgba(41,121,255,.2);
+}
+
+
+/* =========================================================
+   SCREEN HEADERS
+========================================================= */
+
+.screen-header {
+    width: 100%;
+    max-width: 700px;
+
+    margin: 0 auto 10px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.screen-header h1 {
+    flex: 1;
+}
+
+
+/* =========================================================
+   SCREEN CONTENT
+========================================================= */
+
+.screen-content {
+    width: 100%;
+    max-width: 700px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   CARDS / PANELS
+========================================================= */
+
+.setup-card,
+.challenge-card,
+.game-code-card,
+.players-card,
+.host-control-card,
+.panel,
+.host-panel,
+.host-section {
+    width: 100%;
+
+    margin: 10px auto;
+
+    padding: 14px;
+
+    background: #222;
+
+    border: 1px solid #444;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 3px 10px rgba(0,0,0,.25);
+}
+
+
+/* =========================================================
+   CHALLENGE CARD
+========================================================= */
+
+.challenge-card {
+    background: #fff;
+    color: #111;
+
+    padding: 15px;
+
+    text-align: center;
+
+    border: none;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.3);
+}
+
+.challenge-card h2 {
+    margin-top: 5px;
+}
+
+.challenge-number {
+    font-size: 12px;
+    font-weight: bold;
+
+    text-transform: uppercase;
+
+    color: #555;
+}
+
+
+/* =========================================================
+   COLLECTION
+========================================================= */
+
+#categoryCards {
+    width: 100%;
+    margin-top: 12px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+/* =========================================================
+   CATEGORY CARDS
+========================================================= */
+
+.category-card {
+    width: 100%;
+
+    min-height: 76px;
+
+    padding: 13px 14px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    background: #fff;
+    color: #111;
+
+    border: 3px solid #2979ff;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 4px 10px rgba(0,0,0,.3);
+
+    cursor: pointer;
+
+    transition:
+        transform .1s ease,
+        box-shadow .15s ease,
+        background .15s ease;
+}
+
+.category-card:hover {
+    background: #f1f7ff;
+
+    box-shadow:
+        0 5px 14px rgba(41,121,255,.35);
+}
+
+.category-card:active {
+    transform: scale(.98);
+}
+
+
+/* Number on category card */
+
+.category-number {
+    flex: 0 0 48px;
+
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #2979ff;
+    color: #fff;
+
+    border-radius: 50%;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    box-shadow:
+        0 2px 6px rgba(0,0,0,.25);
+}
+
+
+/* Category text */
+
+.category-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.category-info h3 {
+    margin: 0 0 4px;
+
+    color: #111;
+
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.category-info p {
+    margin: 0;
+
+    color: #555;
+
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.progress-container,
+.progress-bar-container {
+    width: 100%;
+
+    margin: 10px 0;
+}
+
+.progress-info {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 6px;
+
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+
+    background: #333;
+
+    border: 1px solid #555;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+
+    background: #00c853;
+
+    border-radius: 10px;
+
+    transition: width .25s ease;
+}
+
+
+/* =========================================================
+   BUTTON ROWS
+========================================================= */
+
+.button-row,
+.action-buttons,
+.host-buttons,
+.camera-controls,
+.photo-controls {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 9px;
+
+    margin-top: 10px;
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+.camera-container {
+    width: 100%;
+    max-width: 700px;
+
+    margin: 10px auto;
+
+    padding: 8px;
+
+    background: #222;
+
+    border: 2px solid #555;
+
+    border-radius: 14px;
+
+    overflow: hidden;
+}
+
+.camera-preview {
+    display: block;
+
+    width: 100%;
+
+    max-height: 65vh;
+
+    background: #000;
+
+    border-radius: 10px;
+
+    object-fit: cover;
+}
+
+.camera-controls {
+    margin-top: 9px;
+}
+
+
+/* =========================================================
+   CAMERA BUTTON
+========================================================= */
+
+#takePhotoButton {
+    width: 100%;
+    max-width: 500px;
+
+    min-height: 56px;
+
+    margin: 14px auto 7px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    background: #00c853;
+    color: #fff;
+
+    border: 3px solid #00e676;
+
+    border-radius: 14px;
+
+    font-size: 16px;
+
+    box-shadow:
+        0 4px 12px rgba(0,200,83,.35);
+}
+
+#takePhotoButton:hover {
+    background: #00b248;
+}
+
+
+/* =========================================================
+   CHOOSE PHOTO
+========================================================= */
+
+#choosePhotoButton {
+    display: block;
+
+    width: 100%;
+    max-width: 500px;
+
+    margin: 7px auto;
+
+    background: #2979ff;
+    color: #fff;
+
+    border-color: #448aff;
+}
+
+
+/* =========================================================
+   PASS BUTTON
+========================================================= */
+
+#passCategoryButton {
+    display: block;
+
+    width: 100%;
+    max-width: 500px;
+
+    margin: 12px auto;
+
+    background: #555;
+    color: #fff;
+
+    border: 2px solid #888;
+}
+
+#passCategoryButton:hover {
+    background: #666;
+}
+
+
+/* =========================================================
+   PHOTO PREVIEW
+========================================================= */
+
+.photo-preview-container {
+    width: 100%;
+
+    max-width: 700px;
+
+    margin: 12px auto;
+
+    padding: 8px;
+
+    background: #fff;
+
+    border-radius: 14px;
+
+    overflow: hidden;
+
+    text-align: center;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.3);
+}
+
+.photo-preview-container:not(.hidden) {
+    display: block !important;
+}
+
+#photoPreview {
+    display: block !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    max-width: 100% !important;
+    max-height: 65vh;
+
+    margin: 0 auto;
+
+    border-radius: 10px;
+
+    object-fit: contain;
+
+    background: #eee;
+}
+
+
+/* =========================================================
+   SUBMIT PHOTO
+========================================================= */
+
+#submitPhotoButton {
+    width: 100%;
+    max-width: 500px;
+
+    min-height: 48px;
+
+    margin: 9px auto;
+
+    display: block;
+
+    background: #00c853;
+    color: #fff;
+
+    border: 3px solid #00e676;
+
+    font-size: 15px;
+
+    box-shadow:
+        0 4px 10px rgba(0,200,83,.3);
+}
+
+
+/* =========================================================
+   PLAYER LIST
+========================================================= */
+
+.player-list,
+.players-list {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(150px, 1fr)
+        );
+
+    gap: 8px;
+}
+
+.player-card {
+    padding: 10px;
+
+    background: #fff;
+    color: #111;
+
+    border: 2px solid #2979ff;
+
+    border-radius: 9px;
+
+    text-align: center;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   VOTING
+========================================================= */
+
+#votingSection,
+#votingCards {
+    width: 100%;
+}
+
+.voting-category-title {
+    margin: 10px 0 6px;
+
+    text-align: center;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   PHOTO GRID
+========================================================= */
+
+.findit-photo-grid {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+    align-items: start;
+
+    margin-top: 8px;
+}
+
+
+/* =========================================================
+   UNIVERSAL PHOTO CARD
+========================================================= */
+
+.findit-photo-card {
+    width: 100%;
+
+    margin: 0;
+    padding: 6px;
+
+    background: #fff;
+    color: #111;
+
+    border: 2px solid #2979ff;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 9px rgba(0,0,0,.25);
+
+    overflow: hidden;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   PHOTO WRAPPER
+========================================================= */
+
+.findit-photo-wrapper {
+    width: 100%;
+
+    aspect-ratio: 4 / 3;
+
+    overflow: hidden;
+
+    border-radius: 8px;
+
+    background: #eee;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.findit-photo-wrapper img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+/* =========================================================
+   PHOTO DETAILS
+========================================================= */
+
+.findit-photo-details {
+    padding: 7px 3px 2px;
+
+    text-align: center;
+}
+
+.findit-photo-player {
+    font-size: 14px;
+    font-weight: bold;
+
+    line-height: 1.2;
+
+    margin-bottom: 3px;
+}
+
+.findit-photo-challenge {
+    font-size: 12px;
+    font-weight: 600;
+
+    line-height: 1.25;
+
+    margin-bottom: 4px;
+}
+
+.findit-photo-status {
+    font-size: 10px;
+    font-weight: bold;
+
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   PHOTO ACTION
+========================================================= */
+
+.findit-photo-card .findit-photo-action {
+    display: block;
+
+    width: 100%;
+
+    min-height: 38px;
+
+    margin-top: 6px;
+
+    padding: 6px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #2979ff;
+    color: #fff;
+
+    font-family: inherit;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   PHOTO LABELS
+========================================================= */
+
+.findit-own-photo,
+.findit-photo-completed {
+    display: inline-block;
+
+    margin-top: 3px;
+
+    padding: 3px 7px;
+
+    border-radius: 10px;
+
+    background: #2979ff;
+    color: #fff;
+
+    font-size: 9px;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   HOST CONTROLS
+========================================================= */
+
+.host-controls {
+    margin-top: 14px;
+}
+
+.host-control-card {
+    background: #222;
+
+    border: 2px solid #ff9800;
+
+    border-radius: 14px;
+}
+
+.host-control-card span {
+    color: #ff9800;
+
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   WINNER PHOTOS
+========================================================= */
+
+.winner-photo-container {
+    width: 100%;
+    max-width: 650px;
+
+    margin: 12px auto;
+
+    overflow: hidden;
+
+    border-radius: 14px;
+
+    background: #222;
+}
+
+#winnerPhoto {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    max-height: 65vh;
+
+    object-fit: contain;
+}
+
+
+/* =========================================================
+   WINNING PHOTO CARDS
+========================================================= */
+
+.host-winning-card {
+    width: 100%;
+    max-width: 600px;
+
+    margin: 20px auto;
+
+    padding: 16px;
+
+    border-radius: 16px;
+
+    background: #222;
+
+    border: 2px solid #ff9800;
+
+    box-sizing: border-box;
+
+    text-align: center;
+}
+
+.host-winning-photo-wrapper {
+    width: 100%;
+
+    margin: 10px 0 15px;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+}
+
+.host-winning-photo {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    border-radius: 12px;
+}
+
+.host-winning-player {
+    font-size: 1.2rem;
+    font-weight: bold;
+
+    margin-top: 8px;
+}
+
+.host-winning-votes {
+    font-size: 1rem;
+
+    margin-top: 5px;
+
+    opacity: .85;
+}
+
+.host-winning-label {
+    margin: 12px 0;
+
+    font-weight: bold;
+}
+
+.winner-splash-button {
+    width: 100%;
+
+    margin-top: 12px;
+
+    background: #00c853;
+    color: #fff;
+
+    border: 2px solid #00e676;
+}
+
+.host-winning-card.selected-splash-photo {
+    border: 3px solid #00e676;
+
+    box-shadow:
+        0 0 18px rgba(0,230,118,.35);
+}
+
+
+/* =========================================================
+   SPLASH
+========================================================= */
+
+#splash {
+    position: relative;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: #111;
+
+    overflow: hidden;
+}
+
+#splash .splash-content {
+    position: relative;
+
+    width: min(92vw, 500px);
+
+    min-height: min(90vh, 750px);
+
+    overflow: hidden;
+
+    border-radius: 24px;
+
+    z-index: 1;
+}
+
+.splash-content {
+    position: relative;
+
+    z-index: 2;
+
+    min-height: 100%;
+}
+
+
+/* =========================================================
+   SPLASH LOGO
+========================================================= */
+
+.logo-main,
+.small-logo,
+.large-logo {
+    font-weight: 900;
+}
+
+.logo-main {
+    font-size: clamp(42px, 12vw, 70px);
+}
+
+.logo-sub {
+    font-size: 15px;
+    font-weight: bold;
+
+    opacity: .9;
+}
+
+
+/* =========================================================
+   SPLASH PHOTO
+========================================================= */
+
+#splashWinningPhoto {
+    position: relative !important;
+
+    display: block !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    max-width: 100% !important;
+    max-height: 40vh !important;
+
+    margin: 20px auto 0;
+
+    border-radius: 18px;
+
+    object-fit: cover !important;
+
+    object-position: center center;
+}
+
+#splash .splash-content > *:not(#splashWinningPhoto) {
+    position: relative;
+
+    z-index: 2;
+}
+
+
+/* =========================================================
+   SPLASH BACKGROUND SUPPORT
+========================================================= */
+
+.splash-background {
+    position: absolute;
+
+    inset: 0;
+
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+
+    z-index: 0;
+
+    opacity: 0;
+
+    transition: opacity .4s ease;
+}
+
+.splash-background.has-photo {
+    opacity: 1;
+}
+
+.splash-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(0,0,0,.45);
+
+    z-index: 1;
+}
+
+
+/* =========================================================
+   UNIVERSAL HIDDEN
+========================================================= */
+
+.hidden {
+    display: none !important;
+}
+
+.photo-preview-container:not(.hidden) {
+    display: block !important;
+}
+
+#photoPreview:not(.hidden) {
+    display: block !important;
+}
+
+
+/* =========================================================
+   LOADING OVERLAY
+========================================================= */
+
+.loading-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0,0,0,.85);
+
+    color: #fff;
+
+    text-align: center;
+}
+
+.loading-overlay.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   LOADING SPINNER
+========================================================= */
+
+.loading-spinner {
+    width: 42px;
+    height: 42px;
+
+    margin-bottom: 12px;
+
+    border: 4px solid rgba(255,255,255,.25);
+
+    border-top-color: #fff;
+
+    border-radius: 50%;
+
+    animation:
+        finditSpin
+        .8s
+        linear
+        infinite;
+}
+
+@keyframes finditSpin {
+
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+/* =========================================================
+   TABLET / DESKTOP
+========================================================= */
+
+@media (min-width: 700px) {
+
+    .screen {
+        padding: 16px 16px 30px;
+    }
+
+    .findit-photo-grid {
+        grid-template-columns:
+            repeat(2, minmax(0,1fr));
+
+        max-width: 700px;
+
+        margin-left: auto;
+        margin-right: auto;
+
+        gap: 14px;
+    }
+
+    .findit-photo-card {
+        padding: 8px;
+        border-radius: 14px;
+    }
+
+    .findit-photo-player {
+        font-size: 16px;
+    }
+
+    .findit-photo-challenge {
+        font-size: 13px;
+    }
+
+    .findit-photo-status {
+        font-size: 11px;
+    }
+
+    .findit-photo-card .findit-photo-action {
+        min-height: 38px;
+        font-size: 12px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 340px) {
+
+    .findit-photo-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .findit-photo-card {
+        max-width: 300px;
+
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .category-card {
+        padding: 10px;
+    }
+
+    .category-number {
+        flex-basis: 42px;
+
+        width: 42px;
+        height: 42px;
+
+        font-size: 17px;
+    }
+
+    .category-info h3 {
+        font-size: 16px;
+    }
+
+}
+
+
+/* =========================================================
+   TOUCH
+========================================================= */
+
+button,
+.button,
+.btn,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+/* =========================================================
+   PREVENT OVERFLOW
+========================================================= */
+
+.screen,
+.findit-photo-grid,
+.findit-photo-card,
+.panel,
+.host-panel {
+    max-width: 100%;
+
+    overflow-wrap: break-word;
+}

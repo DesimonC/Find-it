@@ -1,0 +1,1274 @@
+<!DOCTYPE html >
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <meta
+    name="theme-color"
+    content="#111111"
+    >
+
+    <title>Find it!</title>
+
+    <link
+    rel="stylesheet"
+    href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <div id="app">
+
+
+        <!-- ==================================================
+                SPLASH SCREEN
+                ================================================== -->
+        <section id="splash" class="screen active">
+
+            <div class="splash-content">
+
+                <div class="logo">
+                    <div class="logo-main">
+                        Find it!
+                    </div>
+                    <div class="logo-sub">
+                        See it. Snap it. Win it.
+                    </div>
+                </div>
+
+
+                <!-- LAST OVERALL WINNING PHOTO -->
+
+                <div id="splashPhotoCard" class="splash-photo-card">
+
+                    <img
+                    id="splashWinningPhoto"
+                    alt=""
+                    aria-hidden="true"
+                    >
+
+                </div>
+
+
+                <!-- PLAYER NAME -->
+
+                <div class="splash-player">
+
+                    <input
+                    id="playerNameInput"
+                    class="text-input"
+                    type="text"
+                    maxlength="20"
+                    placeholder="Enter Your Name"
+                    autocomplete="off"
+                    autocapitalize="words"
+                    >
+
+                </div>
+
+
+                <!-- GAME CODE -->
+
+                <div class="splash-code">
+
+                    <input
+                    id="gameCodeInput"
+                    class="text-input game-code-input"
+                    type="text"
+                    maxlength="6"
+                    placeholder="Enter Game Code"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    >
+
+                </div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="splash-actions">
+
+                    <button
+                        id="hostButton"
+                        class="primary-button"
+                        type="button"
+                        >
+                        HOST
+                    </button>
+
+                    <button
+                        id="joinButton"
+                        class="secondary-button"
+                        type="button"
+                        >
+                        JOIN GAME
+                    </button>
+
+                    <button
+                        id="rejoinButton"
+                        class="secondary-button"
+                        type="button"
+                        >
+                        REJOIN GAME
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="splashMessage"
+                    class="message"
+                    ></div>
+
+            </div>
+
+        </section>
+        <!-- ==================================================
+                HOST SETUP
+                ================================================== -->
+
+        <section
+            id="hostSetupScreen"
+            class="screen"
+            >
+
+            <header class="screen-header">
+
+                <button
+                    id="hostSetupBackButton"
+                    class="back-button"
+                    type="button"
+                    >
+                    ←
+                </button>
+
+                <h1>
+                    Set Up Game
+                </h1>
+
+            </header>
+
+
+            <main class="screen-content">
+
+
+                <!-- HOST NAME -->
+
+                <div class="setup-card">
+
+                    <label for="hostNameInput">
+                        Your Name
+                    </label>
+
+                    <input
+                    id="hostNameInput"
+                    class="text-input"
+                    type="text"
+                    maxlength="20"
+                    placeholder="Enter your name"
+                    autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- CATEGORY COUNT -->
+
+                <div class="setup-card">
+
+                    <h2>
+                        Categories
+                    </h2>
+
+                    <p class="help-text">
+                        Choose how many challenges everyone will have.
+                    </p>
+
+
+                    <div class="option-row">
+
+                        <button
+                            class="category-count-button selected"
+                            data-category-count="1"
+                            type="button"
+                            >
+                            1
+                        </button>
+
+                        <button
+                            class="category-count-button"
+                            data-category-count="3"
+                            type="button"
+                            >
+                            5
+                        </button>
+
+                        <button
+                            class="category-count-button"
+                            data-category-count="7"
+                            type="button"
+                            >
+                            9
+                        </button>
+
+                        <button
+                            class="category-count-button"
+                            data-category-count="11"
+                            type="button"
+                            >
+                            11
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="categoryPreview"
+                        class="category-preview"
+                        >
+                        Categories will be selected from the game library.
+                    </div>
+
+                </div>
+
+
+                <!-- GENERATE GAME -->
+
+                <button
+                    id="generateGameButton"
+                    class="primary-button large-button"
+                    type="button"
+                    >
+                    Generate Game
+                </button>
+
+
+                <!-- HOST REJOIN -->
+
+                <div class="setup-card host-rejoin-card">
+
+                    <h2>
+                        Rejoin Existing Game
+                    </h2>
+
+                    <p class="help-text">
+                        Already created a game?
+                        Enter the game code to return as host.
+                    </p>
+
+                    <input
+                    id="rejoinGameCodeInput"
+                    class="text-input game-code-input"
+                    type="text"
+                    maxlength="6"
+                    placeholder="Enter Game Code"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    >
+
+                    <button
+                        id="hostRejoinGameButton"
+                        class="secondary-button large-button"
+                        type="button"
+                        >
+                        Rejoin Game
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="hostSetupMessage"
+                    class="message"
+                    ></div>
+
+            </main>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                HOST LOBBY
+                ================================================== -->
+
+        <section
+            id="hostLobbyScreen"
+            class="screen"
+            >
+
+            <header class="screen-header">
+
+                <div>
+
+                    <h1>
+                        Find it!
+                    </h1>
+
+                    <span class="host-label">
+                        HOST
+                    </span>
+
+                </div>
+
+
+                <button
+                    id="hostLobbyEndButton"
+                    class="danger-small-button"
+                    type="button"
+                    >
+                    End game.
+                </button>
+
+            </header>
+
+
+            <main class="screen-content">
+
+
+                <div class="game-code-card">
+
+                    <span>
+                        Game Code
+                    </span>
+
+                    <strong id="hostGameCode">
+                        ------
+                    </strong>
+
+                    <p>
+                        Give this code to your players
+                    </p>
+
+                </div>
+
+
+                <div class="players-card">
+
+                    <div class="section-title-row">
+
+                        <h2>
+                            Players
+                        </h2>
+
+                        <span id="hostPlayerCount">
+                            0
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="hostPlayerList"
+                        class="player-list"
+                        ></div>
+
+                </div>
+
+
+                <div class="host-start-area">
+
+                    <p id="hostLobbyStatus">
+                        Waiting for players...
+                    </p>
+
+                    <button
+                        id="startGameButton"
+                        class="primary-button large-button"
+                        type="button"
+                        disabled
+                        >
+                        Start Game
+                    </button>
+
+                </div>
+
+            </main>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                PLAYER WAITING
+                ================================================== -->
+
+        <section
+            id="playerWaitingScreen"
+            class="screen"
+            >
+
+            <div class="waiting-content">
+
+                <div class="small-logo">
+                    Find it!
+                </div>
+
+                <div class="waiting-icon">
+                    📸
+                </div>
+
+                <h1 id="waitingWelcome">
+                    Welcome!
+                </h1>
+
+                <p>
+                    You're in the game.
+                </p>
+
+                <div class="waiting-game-code">
+
+                    Game Code
+
+                    <strong id="waitingGameCode">
+                        ------
+                    </strong>
+
+                </div>
+
+
+                <div class="waiting-status">
+
+                    <div class="loading-dots">
+
+                        <span></span>
+                        <span></span>
+                        <span></span>
+
+                    </div>
+
+                    <h2>
+                        Waiting for the host
+                    </h2>
+
+                    <p>
+                        The game will start when everyone is ready.
+                    </p>
+
+                </div>
+
+
+                <div class="waiting-players">
+
+                    <h3>
+                        Players
+                    </h3>
+
+                    <div
+                        id="waitingPlayerList"
+                        class="player-list"
+                        ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                COLLECTION SCREEN
+                ================================================== -->
+
+        <section
+            id="collectionScreen"
+            class="screen"
+            >
+
+            <header class="game-header">
+
+                <div class="game-title">
+
+                    <span>
+                        Find it!
+                    </span>
+
+                    <small id="collectionPlayerName">
+                        Player
+                    </small>
+
+                </div>
+
+            </header>
+
+
+            <main class="screen-content">
+
+
+                <div class="collection-intro">
+
+                    <h1>
+                        Find it!
+                    </h1>
+
+                    <p>
+                        Complete all the challenges.
+                    </p>
+
+
+                    <div class="progress-container">
+
+                        <div class="progress-info">
+
+                            <span>
+                                Progress
+                            </span>
+
+                            <strong id="collectionProgressText">
+                                0 / 1
+                            </strong>
+
+                        </div>
+
+
+                        <div class="progress-bar">
+
+                            <div
+                                id="collectionProgressBar"
+                                class="progress-fill"
+                                style="width: 0%"
+                                ></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="categoryCards"
+                    class="category-cards"
+                    ></div>
+
+
+                <!-- HOST ONLY -->
+
+                <div
+                    id="hostCollectionControls"
+                    class="host-controls hidden"
+                    >
+
+                    <div class="host-control-card">
+
+                        <span>
+                            Host Controls
+                        </span>
+
+                        <p>
+                            Everyone can continue until they have completed
+                            all challenges, or the host can end the game early.
+                        </p>
+
+                        <button
+                            id="scoreGameButton"
+                            class="primary-button"
+                            type="button"
+                            >
+                            End Game &amp; Start Scoring
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                PHOTO UPLOAD
+                ================================================== -->
+
+        <section
+            id="photoUploadScreen"
+            class="screen"
+            >
+
+            <header class="screen-header">
+
+                <button
+                    id="uploadBackButton"
+                    class="back-button"
+                    type="button"
+                    >
+                    ←
+                </button>
+
+                <h1 id="uploadCategoryTitle">
+                    Category
+                </h1>
+
+            </header>
+
+
+            <main class="screen-content upload-content">
+
+
+                <div class="challenge-card">
+
+                    <div
+                        id="uploadCategoryNumber"
+                        class="challenge-number"
+                        >
+                        Challenge 1
+                    </div>
+
+                    <h2 id="uploadCategoryName">
+                        Something Red
+                    </h2>
+
+                    <p id="uploadCategoryDescription">
+                        Find something that matches this challenge.
+                    </p>
+
+                </div>
+
+
+                <!-- CAMERA -->
+
+                <div
+                    id="cameraContainer"
+                    class="camera-container hidden"
+                    >
+
+                    <video
+                        id="cameraPreview"
+                        class="camera-preview"
+                        autoplay
+                        playsinline
+                        muted
+                        ></video>
+
+
+                    <div class="camera-controls">
+
+                        <button
+                            id="capturePhotoButton"
+                            class="primary-button small-button"
+                            type="button"
+                            >
+                            📷 TAKE PICTURE
+                        </button>
+
+                        <button
+                            id="closeCameraButton"
+                            class="text-button"
+                            type="button"
+                            >
+                            Cancel
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PREVIEW -->
+
+                <div
+                    id="photoPreviewContainer"
+                    class="photo-preview-container hidden"
+                    >
+
+                    <img
+                    id="photoPreview"
+                    src=""
+                    alt="Your captured photo"
+                    >
+
+                </div>
+
+
+                <button
+                    id="takePhotoButton"
+                    class="camera-button"
+                    type="button"
+                    >
+
+                    📷
+
+                    <span>
+                        Take Photo
+                    </span>
+
+                </button>
+
+
+                <button
+                    id="choosePhotoButton"
+                    class="text-button"
+                    type="button"
+                    >
+                    Choose Photo From Device
+                </button>
+
+
+                <input
+                id="photoInput"
+                type="file"
+                accept="image/*"
+                hidden
+                >
+
+
+                <button
+                    id="submitPhotoButton"
+                    class="primary-button small-button hidden"
+                    type="button"
+                    >
+                    Submit Photo
+                </button>
+
+
+                <button
+                    id="passCategoryButton"
+                    class="text-button"
+                    type="button"
+                    >
+                    Pass This Challenge
+                </button>
+
+
+                <div
+                    id="uploadMessage"
+                    class="message"
+                    ></div>
+
+            </main>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                VOTING
+                ================================================== -->
+
+        <section
+            id="votingSection"
+            class="screen"
+            style="display:none;"
+            >
+
+            <div class="voting-header">
+
+                <h1>
+                    🏆 VOTING
+                </h1>
+
+                <p>
+                    Choose your favourite photo for each challenge.
+                </p>
+
+            </div>
+
+
+            <div
+                id="votingCards"
+                class="voting-cards"
+                ></div>
+
+
+            <div class="voting-footer">
+
+                <p id="votingStatus">
+                    Loading entries...
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                SCORING INTRO
+                ================================================== -->
+
+        <section
+            id="scoringIntroScreen"
+            class="screen"
+            >
+
+            <div class="scoring-intro-content">
+
+                <div class="small-logo">
+                    Find it!
+                </div>
+
+                <div class="scoring-icon">
+                    🏆
+                </div>
+
+                <h1>
+                    It's Time to Score!
+                </h1>
+
+                <p>
+                    The photo hunt is over.
+                </p>
+
+                <p>
+                    Now choose your favourite photo
+                    from each category.
+                </p>
+
+                <div class="scoring-wait-message">
+                    Waiting for the host to begin scoring...
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                SCORING
+                ================================================== -->
+
+        <section
+            id="scoringScreen"
+            class="screen"
+            >
+
+            <header class="game-header">
+
+                <div class="game-title">
+
+                    <span>
+                        Find it!
+                    </span>
+
+                    <small>
+                        Choose your favourite
+                    </small>
+
+                </div>
+
+                <div class="scoring-progress">
+
+                    <span id="scoringCategoryNumber">
+                        1 / 8
+                    </span>
+
+                </div>
+
+            </header>
+
+
+            <main class="screen-content scoring-content">
+
+                <div class="scoring-category">
+
+                    <span>
+                        Category
+                    </span>
+
+                    <h1 id="scoringCategoryName">
+                        Something Red
+                    </h1>
+
+                </div>
+
+
+                <p class="scoring-instruction">
+                    Tap the photo you think is the best.
+                </p>
+
+
+                <div
+                    id="scoringPhotoGrid"
+                    class="scoring-photo-grid"
+                    ></div>
+
+
+                <div
+                    id="scoringCompleteMessage"
+                    class="message"
+                    ></div>
+
+            </main>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                HOST WINNERS CONTROL
+                ================================================== -->
+
+        <section
+            id="hostWinnersControlScreen"
+            class="screen"
+            >
+
+            <div class="winner-control-content">
+
+                <div class="small-logo">
+                    Find it!
+                </div>
+
+                <div class="winner-icon">
+                    🏆
+                </div>
+
+                <h1>
+                    Scoring Complete
+                </h1>
+
+                <p>
+                    All players have voted.
+                </p>
+
+                <button
+                    id="showWinnersButton"
+                    class="primary-button large-button"
+                    type="button"
+                    >
+                    Show Winners
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                WINNER REVEAL
+                ================================================== -->
+
+        <section
+            id="winnerRevealScreen"
+            class="screen"
+            >
+
+            <div class="winner-reveal-content">
+
+                <div class="large-logo">
+                    Find it!
+                </div>
+
+                <div class="winner-category-label">
+                    Category Winner
+                </div>
+
+                <h1 id="winnerCategoryName">
+                    Something Red
+                </h1>
+
+
+                <div class="winner-photo-container">
+
+                    <img
+                    id="winnerPhoto"
+                    src=""
+                    alt="Winning photo"
+                    >
+
+                </div>
+
+
+                <div class="winner-details">
+
+                    <div class="winner-trophy">
+                        🏆
+                    </div>
+
+                    <h2 id="winnerPlayerName">
+                        Winner
+                    </h2>
+
+                    <p id="winnerVoteCount">
+                        0 votes
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="nextWinnerButton"
+                    class="primary-button large-button"
+                    type="button"
+                    >
+                    Next Winner
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                FINAL RESULTS
+                ================================================== -->
+
+        <section
+            id="finalResultsScreen"
+            class="screen"
+            >
+
+            <div class="final-results-content">
+
+                <div class="small-logo">
+                    Find it!
+                </div>
+
+                <div class="final-trophy">
+                    🏆
+                </div>
+
+                <h1>
+                    Game Over!
+                </h1>
+
+                <p>
+                    Congratulations to our winner!
+                </p>
+
+
+                <div
+                    id="finalWinner"
+                    class="final-winner"
+                    >
+
+                    <h2>
+                        Winner
+                    </h2>
+
+                    <strong id="finalWinnerName">
+                        ---
+                    </strong>
+
+                    <span id="finalWinnerScore">
+                        0 points
+                    </span>
+
+                </div>
+
+
+                <div class="final-scoreboard">
+
+                    <h2>
+                        Final Scores
+                    </h2>
+
+                    <div
+                        id="finalScoreList"
+                        class="score-list"
+                        ></div>
+
+                </div>
+
+
+                <button
+                    id="playAgainButton"
+                    class="primary-button large-button"
+                    type="button"
+                    >
+                    Play Again
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+                LOADING OVERLAY
+                ================================================== -->
+
+        <div
+            id="loadingOverlay"
+            class="loading-overlay hidden"
+            >
+
+            <div class="loading-spinner"></div>
+
+            <p id="loadingMessage">
+                Loading...
+            </p>
+
+        </div>
+
+
+
+        <!-- ==================================================
+                ERROR TOAST
+                ================================================== -->
+
+        <div
+            id="errorToast"
+            class="error-toast hidden"
+            ></div>
+
+
+    </div>
+
+
+
+    <!-- ==================================================
+        JAVASCRIPT
+        ================================================== -->
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script src="utils.js"></script>
+    <script src="Host.js"></script>
+    <script src="results.js"></script>
+    <script src="player.js"></script>
+    <script src="photos.js"></script>
+    <script src="voting.js"></script>
+
+
+    <!-- ==================================================
+        SPLASH BACKGROUND
+        ================================================== -->
+
+    <script>
+
+        (function () {
+
+            const SPLASH_PHOTO_KEY =
+            "findItSplashPhoto";
+
+
+            async function loadSplashBackground() {
+
+                const splash =
+                document.getElementById("splash");
+
+                if (!splash) {
+                    return;
+                }
+
+
+                const photoId =
+                localStorage.getItem(
+                    SPLASH_PHOTO_KEY
+                );
+
+
+                if (!photoId) {
+
+                    console.log(
+                        "SPLASH: No saved winning photo."
+                    );
+
+                    return;
+                }
+
+
+                console.log(
+                    "SPLASH: Loading saved winning photo:",
+                    photoId
+                );
+
+
+                try {
+
+                    if (
+                        typeof apiGet !== "function"
+                    ) {
+
+                        console.warn(
+                            "SPLASH: apiGet is not available."
+                        );
+
+                        return;
+                    }
+
+
+                    const result =
+                    await apiGet(
+                        "getPhoto",
+                        {
+                            photoId: photoId
+                        }
+                    );
+
+
+                    if (
+                        !result ||
+                        !result.base64
+                    ) {
+
+                        console.warn(
+                            "SPLASH: Saved photo could not be loaded."
+                        );
+
+                        return;
+                    }
+
+
+                    const mimeType =
+                    result.mimeType ||
+                    "image/jpeg";
+
+
+                    const imageUrl =
+                    "data:" +
+                    mimeType +
+                    ";base64," +
+                    result.base64;
+
+
+                    splash.style.backgroundImage =
+                    "url('" +
+                    imageUrl +
+                    "')";
+
+
+                    splash.classList.add(
+                        "has-splash-photo"
+                    );
+
+
+                    console.log(
+                        "SPLASH: Winning photo loaded."
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "SPLASH: Failed to load saved photo:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            window.addEventListener(
+                "load",
+                loadSplashBackground
+            );
+
+
+        })();
+
+    </script>
+
+
+</body>
+</html>
