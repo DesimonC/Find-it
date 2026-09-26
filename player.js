@@ -1698,12 +1698,36 @@ function openPlayerCategory(
 
 
     /* -----------------------------------------------------
-       5. Show photo upload screen
+       5. Let photos.js own the photo-upload transition
     ----------------------------------------------------- */
 
-    showScreen(
-        "photoUploadScreen"
-    );
+    if (
+        typeof window.openPhotoUpload ===
+        "function"
+    ) {
+
+        window.openPhotoUpload(
+            category
+        );
+
+    } else if (
+        typeof window.showScreen ===
+        "function"
+    ) {
+
+        /* Fallback if photos.js is unavailable. */
+        window.showScreen(
+            "photoUploadScreen"
+        );
+
+    } else {
+
+        console.error(
+            "PLAYER: Photo upload screen controller is unavailable."
+        );
+
+        return;
+    }
 
 
     console.log(
