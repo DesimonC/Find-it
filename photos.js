@@ -816,6 +816,16 @@ function openPhotoUpload(
     }
 
 
+    // Explicitly restore the entry controls after the screen switch.
+    // These are the visible options the player must see after tapping a challenge.
+    photoShowElement("takePhotoButton");
+    photoShowElement("choosePhotoButton");
+    photoHideElement("cameraContainer");
+    photoHideElement("capturePhotoButton");
+    photoHideElement("closeCameraButton");
+    photoHideElement("photoPreviewContainer");
+    photoHideElement("submitPhotoButton");
+
     console.log(
         "PHOTOS: Photo upload screen ready for challenge:",
         currentCategory
