@@ -797,41 +797,7 @@ function restoreSavedPlayer() {
         );
 
 
-        /*
-           Put saved details into the
-           splash boxes so the user can
-           easily rejoin.
-        */
-
-        const nameInput =
-            document.getElementById(
-                "playerNameInput"
-            );
-
-        const codeInput =
-            document.getElementById(
-                "gameCodeInput"
-            );
-
-
-        if (nameInput) {
-
-            nameInput.value =
-                player.playerName ||
-                player.name ||
-                "";
-
-        }
-
-
-        if (codeInput) {
-
-            codeInput.value =
-                player.gameCode ||
-                "";
-
-        }
-
+        /* Saved player is retained for explicit REJOIN only. Do not pre-fill the splash game code. */
 
     } catch (error) {
 
