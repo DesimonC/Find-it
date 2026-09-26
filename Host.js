@@ -39,7 +39,7 @@
    - START VOTING is shown during SCORING.
    - Old/stale game responses cannot move the game backwards.
    - No automatic old-game restoration on startup.
-   - Category choices are exactly 1, 3, 7, 11.
+   - Category count is any whole number from 1 to 10. Default is 1.
 ========================================================= */
 
 
@@ -390,7 +390,7 @@ function setHostCategoryCount(count) {
     count = Number(count);
 
     if (
-        ![1, 3, 7, 11].includes(count)
+        !Number.isInteger(count) || count < 1 || count > 10
     ) {
         count = 1;
     }
@@ -557,9 +557,7 @@ async function hostCreateGame() {
         );
 
     if (
-        ![1, 3, 7, 11].includes(
-            categoryCount
-        )
+        !Number.isInteger(categoryCount) || categoryCount < 1 || categoryCount > 10
     ) {
         categoryCount = 1;
     }
