@@ -2871,12 +2871,9 @@ function getOrCreatePassesSheet() {
 
 
 let sheet =
-
-getSheet(
-
-PASSES_SHEET
-
-);
+  SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(PASSES_SHEET);
 
 
 
