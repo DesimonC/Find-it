@@ -427,48 +427,6 @@ function setHostCategoryCount(count) {
     );
 
 
-    /*
-       Also support buttons using IDs such as:
-
-       categoryCount1
-       categoryCount3
-       categoryCount7
-       categoryCount11
-    */
-
-    [
-        "categoryCount1",
-        "categoryCount3",
-        "categoryCount7",
-        "categoryCount11"
-    ]
-    .forEach(
-        function(id) {
-
-            const button =
-                document.getElementById(id);
-
-            if (!button) {
-                return;
-            }
-
-            const value =
-                Number(
-                    button.dataset.value ||
-                    button.value ||
-                    id.replace(
-                        "categoryCount",
-                        ""
-                    )
-                );
-
-            button.classList.toggle(
-                "selected",
-                value === count
-            );
-        }
-    );
-}
 
 
 /* =========================================================
