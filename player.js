@@ -1698,35 +1698,23 @@ function openPlayerCategory(
 
 
     /* -----------------------------------------------------
-       5. Let photos.js own the photo-upload transition
+       5. Move to PHOTO UPLOAD immediately.
+
+       The player controller owns the screen transition.
+       photos.js then prepares the camera/photo controls.
+       This prevents the collection screen from remaining
+       visible if photos.js has a load/binding problem.
     ----------------------------------------------------- */
 
-    if (
-        typeof window.openPhotoUpload ===
-        "function"
-    ) {
-
-        window.openPhotoUpload(
-            category
-        );
-
-    } else if (
-        typeof window.showScreen ===
-        "function"
-    ) {
-
-        /* Fallback if photos.js is unavailable. */
-        window.showScreen(
-            "photoUploadScreen"
-        );
-
+    if (typeof window.showScreen === "function") {
+        window.showScreen("photoUploadScreen");
     } else {
-
-        console.error(
-            "PLAYER: Photo upload screen controller is unavailable."
-        );
-
+        console.error("PLAYER: showScreen() is unavailable.");
         return;
+    }
+
+    if (typeof window.openPhotoUpload === "function") {
+        window.openPhotoUpload(category);
     }
 
 
