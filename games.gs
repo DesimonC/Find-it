@@ -51,15 +51,7 @@ data.playerName ||
 ).trim();
 
 
-const categoryCount =
-
-Number(
-
-data.categoryCount ||
-
-1
-
-);
+const categoryCount = Number(data.categoryCount || 1);
 
 
 
@@ -77,13 +69,7 @@ throw new Error(
 
 
 
-if (
-
-!categoryCount ||
-
-categoryCount < 1
-
-) {
+if (\n\n!Number.isInteger(categoryCount) ||\n\ncategoryCount < 1 ||\n\ncategoryCount > 10\n\n) {
 
 
 throw new Error(
@@ -1787,13 +1773,7 @@ categoryCount || 0
 
 
 
-if (
-
-!gameCode ||
-
-categoryCount < 1
-
-) {
+if (\n\n!gameCode ||\n\n!Number.isInteger(categoryCount) ||\n\ncategoryCount < 1 ||\n\ncategoryCount > 10\n\n) {
 
 
 throw new Error(
