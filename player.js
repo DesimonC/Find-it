@@ -2338,6 +2338,54 @@ function setupHostCollectionControls() {
 
 
 /* =========================================================
+   PHOTO FLOW GUARD
+========================================================= */
+
+function isPlayerPhotoFlowActive() {
+
+    const photoScreen =
+        document.getElementById(
+            "photoUploadScreen"
+        );
+
+
+    if (
+        photoScreen &&
+        photoScreen.classList.contains("active")
+    ) {
+
+        return true;
+    }
+
+
+    const cameraContainer =
+        document.getElementById(
+            "cameraContainer"
+        );
+
+
+    if (cameraContainer) {
+
+        const style =
+            window.getComputedStyle(
+                cameraContainer
+            );
+
+        if (
+            style.display !== "none" &&
+            style.visibility !== "hidden"
+        ) {
+
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
+
+/* =========================================================
    GAME STATUS POLLING
 ========================================================= */
 
@@ -2417,32 +2465,45 @@ async function playerGameStatusPoll() {
            PLAYING
         ------------------------------------------------- */
 
-        if (
-            game.status ===
-            "PLAYING"
-        ) {
+        /*
+           IMPORTANT:
+           Do not let the 3-second status poll pull the player
+           back to collectionScreen while the photo challenge is
+           open or the camera/preview is active.
+        */
+        if (isPlayerPhotoFlowActive()) {
 
-            if (!playerGameOpen) {
+            playerGameOpen = true;
 
-                playerGameOpen =
-                    true;
+            await refreshPlayerCategories();
 
-
-                await openPlayerCollectionScreen(
-                    game,
-                    currentPlayer
-                );
-
-            } else {
-
-                await refreshPlayerCategories();
-
-                await checkAndUpdateHostControls();
-            }
-
+            await checkAndUpdateHostControls();
 
             return;
         }
+
+
+        if (!playerGameOpen) {
+
+            playerGameOpen =
+                true;
+
+
+            await openPlayerCollectionScreen(
+                game,
+                currentPlayer
+            );
+
+        } else {
+
+            await refreshPlayerCategories();
+
+            await checkAndUpdateHostControls();
+        }
+
+
+        return;
+    }
 
 
         /* -------------------------------------------------
