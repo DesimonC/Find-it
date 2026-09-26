@@ -133,26 +133,6 @@ GAME
 
 --------------------------------------------------- */
 
-case "createGame":
-
-
-return jsonResponse(
-
-createGame({
-
-hostName:
-
-data.hostName,
-
-
-categoryCount:
-
-data.categoryCount
-
-})
-
-);
-
 case "getGame":
 
 
@@ -1285,19 +1265,6 @@ params.HostName ||
 )
 
 .trim(),
-
-
-categoryCount:
-
-Number(
-
-params.categoryCount ||
-
-params.CategoryCount ||
-
-0
-
-),
 
 
 photoId:
