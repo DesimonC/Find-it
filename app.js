@@ -111,7 +111,32 @@ function setupSplashButtons() {
     if (hostButton) {
 
         hostButton.onclick =
-            splashHost;
+            function(event) {
+
+                event.preventDefault();
+
+                console.log(
+                    "HOST: Splash HOST clicked."
+                );
+
+                if (
+                    typeof window.initialiseHost ===
+                    "function"
+                ) {
+
+                    window.initialiseHost();
+
+                    return;
+                }
+
+                console.error(
+                    "HOST: initialiseHost() is not available."
+                );
+
+                showScreen(
+                    "hostSetupScreen"
+                );
+            };
 
         console.log(
             "Host button connected"
