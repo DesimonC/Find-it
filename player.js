@@ -1715,6 +1715,35 @@ function openPlayerCategory(
 
     if (typeof window.openPhotoUpload === "function") {
         window.openPhotoUpload(category);
+    } else {
+        console.error(
+            "PLAYER: openPhotoUpload() is unavailable."
+        );
+        return;
+    }
+
+    /* -----------------------------------------------------
+       6. Hand the challenge directly to the camera.
+       This call is still made from the original challenge
+       card click, so the browser can present its camera
+       permission prompt without losing the user gesture.
+    ----------------------------------------------------- */
+
+    if (typeof window.startPhotoCamera === "function") {
+        console.log(
+            "PLAYER: Handing challenge directly to camera."
+        );
+
+        window.startPhotoCamera().catch(function(error) {
+            console.error(
+                "PLAYER: Camera handoff failed:",
+                error
+            );
+        });
+    } else {
+        console.error(
+            "PLAYER: startPhotoCamera() is unavailable."
+        );
     }
 
 
