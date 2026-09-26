@@ -232,25 +232,26 @@ function splashHost() {
 
 
     /*
-       Host setup has its own name field,
-       so we simply open the host setup
-       screen.
+       HOST must always start a completely fresh session.
+       initialiseHost() clears old game/player/category
+       state while deliberately preserving the saved
+       winning splash photo.
     */
 
     if (
-        typeof openHostSetup ===
+        typeof window.initialiseHost ===
         "function"
     ) {
 
-        openHostSetup();
+        window.initialiseHost();
 
         return;
 
     }
 
 
-    showScreen(
-        "hostSetupScreen"
+    console.error(
+        "SPLASH HOST: initialiseHost() is not available."
     );
 
 }
