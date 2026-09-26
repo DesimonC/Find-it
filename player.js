@@ -1598,126 +1598,40 @@ function updatePlayerPhotoChallenge(
    We therefore DO NOT call openPhotoUpload() here.
 ========================================================= */
 
-function openPlayerCategory(
-    category
-) {
+function openPlayerCategory(category) {
 
     if (!category) {
-
-        console.error(
-            "PLAYER: No category supplied."
-        );
-
+        console.error("PLAYER: No category supplied.");
         return;
     }
 
+    category = normalisePlayerCategory(category);
 
-    category =
-        normalisePlayerCategory(
-            category
-        );
-
-
-    if (
-        isPlayerCategoryComplete(
-            category
-        )
-    ) {
-
-        console.log(
-            "PLAYER: Category already complete."
-        );
-
+    if (isPlayerCategoryComplete(category)) {
+        console.log("PLAYER: Category already complete.");
         return;
     }
 
+    console.log("PLAYER: Opening challenge:", category);
 
-    console.log(
-        "PLAYER: Opening challenge:",
-        category
-    );
+    // Keep the selected challenge in player.js/localStorage.
+    setPlayerCurrentCategory(category);
 
-
-    /* -----------------------------------------------------
-       1. Save the selected challenge in player.js.
-       This is the persistent player-side selection.
-    ----------------------------------------------------- */
-
-    setPlayerCurrentCategory(
-        category
-    );
-
-
-    /* -----------------------------------------------------
-       2. Hand the selected challenge to photos.js.
-       photos.js owns the photo-upload screen and controls.
-    ----------------------------------------------------- */
-
-    if (
-        typeof window.setPhotoCategory ===
-        "function"
-    ) {
-
-        window.setPhotoCategory(
-            category
-        );
-
-    } else {
-
-        console.error(
-            "PLAYER: setPhotoCategory() is unavailable."
-        );
-
+    // photos.js owns the complete hand-off to the upload screen.
+    // It receives the challenge, resets the photo controls and then
+    // exposes Take Photo / Choose Photo for the player.
+    if (typeof window.openPhotoUpload === "function") {
+        window.openPhotoUpload(category);
+        console.log("PLAYER: Photo challenge hand-off complete.");
         return;
     }
 
+    console.error("PLAYER: openPhotoUpload() is unavailable.");
+    updatePlayerPhotoChallenge(category);
 
-    /* -----------------------------------------------------
-       3. Update the challenge heading immediately.
-    ----------------------------------------------------- */
-
-    updatePlayerPhotoChallenge(
-        category
-    );
-
-
-    /* -----------------------------------------------------
-       4. Let photos.js own the hand-off to the upload
-          screen. Do NOT start the camera here.
-
-       The old flow called resetPhotoUpload(),
-       showScreen(), openPhotoUpload(), and then
-       startPhotoCamera() from player.js. That duplicated
-       screen/UI ownership and could make the challenge
-       appear not to change.
-
-       The player selects the challenge; photos.js opens
-       the upload screen and the player then chooses
-       Take Photo or Choose Photo.
-    ----------------------------------------------------- */
-
-    if (
-        typeof window.openPhotoUpload ===
-        "function"
-    ) {
-
-        window.openPhotoUpload(
-            category
-        );
-
-    } else {
-
-        console.error(
-            "PLAYER: openPhotoUpload() is unavailable."
-        );
-
-        return;
+    if (typeof window.showScreen === "function") {
+        window.showScreen("photoUploadScreen");
     }
-
-
-    console.log(
-        "PLAYER: Photo challenge screen ready."
-    );
 }
 
 /* =========================================================
