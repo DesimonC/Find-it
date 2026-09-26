@@ -731,6 +731,11 @@ function openPhotoUpload(
     );
 
 
+    /* -----------------------------------------------------
+       1. Receive the selected challenge from player.js.
+       photos.js becomes the single owner of the upload UI.
+    ----------------------------------------------------- */
+
     if (category) {
 
         selectedPhotoCategory =
@@ -756,6 +761,13 @@ function openPhotoUpload(
     }
 
 
+    /* -----------------------------------------------------
+       2. Reset only the photo controls.
+       Do this here, after the challenge has been received,
+       so resetPhotoUI cannot accidentally clear the
+       selected challenge.
+    ----------------------------------------------------- */
+
     resetPhotoUI();
 
 
@@ -763,10 +775,18 @@ function openPhotoUpload(
         currentCategory;
 
 
+    /* -----------------------------------------------------
+       3. Put the selected challenge into the upload UI.
+    ----------------------------------------------------- */
+
     updatePhotoChallengeInfo(
         currentCategory
     );
 
+
+    /* -----------------------------------------------------
+       4. photos.js owns the screen transition.
+    ----------------------------------------------------- */
 
     if (
         typeof window.showScreen ===
@@ -797,10 +817,10 @@ function openPhotoUpload(
 
 
     console.log(
-        "PHOTOS: Photo upload screen ready."
+        "PHOTOS: Photo upload screen ready for challenge:",
+        currentCategory
     );
 }
-
 
 /* =========================================================
    CLOSE PHOTO UPLOAD
