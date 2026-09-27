@@ -8,9 +8,10 @@
 
    Purpose:
    - Host is a real player.
-   - Never open collectionScreen directly.
-   - Recover the host player if Host.js runtime state is missing.
-   - Always enter gameplay through player.js so categories,
+   - Never leave the host trapped in Host.js PLAYING polling.
+   - Detect PLAYING independently of Host.js.
+   - Recover the host player when needed.
+   - Enter gameplay through player.js so categories,
      progress, photo state and challenge cards are initialised.
 ========================================================= */
 
@@ -18,72 +19,29 @@ console.log("=================================");
 console.log("Find It! host-gameplay.js loaded");
 console.log("=================================");
 
+let hostGameplayBridgeTimer = null;
+let hostGameplayBridgeBusy = false;
+let hostGameplayEntered = false;
+
 
 /* =========================================================
-   RECOVER HOST PLAYER
+   NORMALISE HELPERS
 ========================================================= */
 
-function recoverHostGameplayPlayer() {
+function hostGameplayGameCode(game) {
+    return String(
+        game &&
+        (game.gameCode || game.GameCode) ||
+        ""
+    ).trim().toUpperCase();
+}
 
-    /* First use Host.js runtime state when available. */
-    if (
-        typeof hostPlayer !== "undefined" &&
-        hostPlayer &&
-        hostPlayer.playerId
-    ) {
-        return hostPlayer;
-    }
-
-    /* Then use player.js runtime state when available. */
-    if (
-        typeof currentPlayer !== "undefined" &&
-        currentPlayer &&
-        currentPlayer.playerId
-    ) {
-        return currentPlayer;
-    }
-
-    /* Finally recover the saved host/player session. */
-    const keys = [
-        "findItCurrentPlayer",
-        "findItPlayer"
-    ];
-
-    for (const key of keys) {
-
-        try {
-
-            const raw =
-                localStorage.getItem(key);
-
-            if (!raw) {
-                continue;
-            }
-
-            const saved =
-                JSON.parse(raw);
-
-            if (
-                saved &&
-                (
-                    saved.playerId ||
-                    saved.PlayerID
-                )
-            ) {
-                return saved;
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "HOST GAMEPLAY: Could not recover player from",
-                key,
-                error
-            );
-        }
-    }
-
-    return null;
+function hostGameplayPlayerId(player) {
+    return String(
+        player &&
+        (player.playerId || player.PlayerID) ||
+        ""
+    ).trim();
 }
 
 
@@ -96,7 +54,7 @@ function recoverHostGameplayGame() {
     if (
         typeof hostGame !== "undefined" &&
         hostGame &&
-        hostGame.gameCode
+        hostGameplayGameCode(hostGame)
     ) {
         return hostGame;
     }
@@ -104,7 +62,7 @@ function recoverHostGameplayGame() {
     if (
         typeof currentPlayerGame !== "undefined" &&
         currentPlayerGame &&
-        currentPlayerGame.gameCode
+        hostGameplayGameCode(currentPlayerGame)
     ) {
         return currentPlayerGame;
     }
@@ -115,31 +73,15 @@ function recoverHostGameplayGame() {
     ];
 
     for (const key of keys) {
-
         try {
+            const raw = localStorage.getItem(key);
+            if (!raw) continue;
 
-            const raw =
-                localStorage.getItem(key);
-
-            if (!raw) {
-                continue;
-            }
-
-            const saved =
-                JSON.parse(raw);
-
-            if (
-                saved &&
-                (
-                    saved.gameCode ||
-                    saved.GameCode
-                )
-            ) {
+            const saved = JSON.parse(raw);
+            if (hostGameplayGameCode(saved)) {
                 return saved;
             }
-
         } catch (error) {
-
             console.warn(
                 "HOST GAMEPLAY: Could not recover game from",
                 key,
@@ -153,89 +95,214 @@ function recoverHostGameplayGame() {
 
 
 /* =========================================================
-   CORRECTED HOST PLAYING ENTRY
-
-   This intentionally replaces Host.js openHostPlaying().
-   Because this file loads after player.js, openPlayerGame()
-   is guaranteed to have had the opportunity to initialise.
+   RECOVER HOST PLAYER
 ========================================================= */
 
-async function openHostPlaying() {
+function recoverHostGameplayPlayer(game) {
 
-    console.log(
-        "HOST GAMEPLAY: Opening host through player gameplay."
-    );
+    const expectedHostId = String(
+        game &&
+        (game.hostPlayerId || game.HostPlayerID) ||
+        ""
+    ).trim();
 
-    const game =
-        recoverHostGameplayGame();
+    const candidates = [];
 
-    const player =
-        recoverHostGameplayPlayer();
-
-    if (!game || !game.gameCode) {
-
-        console.error(
-            "HOST GAMEPLAY: Cannot open game - no valid host game.",
-            game
-        );
-
-        return;
-    }
-
-    if (!player || !player.playerId) {
-
-        console.error(
-            "HOST GAMEPLAY: Cannot open game - no valid host player.",
-            player
-        );
-
-        return;
-    }
-
-    /* Keep Host.js runtime state repaired where possible. */
-    try {
-        hostGame = game;
-        hostPlayer = player;
-    } catch (error) {
-        console.warn(
-            "HOST GAMEPLAY: Could not repair Host.js runtime state.",
-            error
-        );
+    if (
+        typeof hostPlayer !== "undefined" &&
+        hostPlayer
+    ) {
+        candidates.push(hostPlayer);
     }
 
     if (
-        typeof window.openPlayerGame !== "function"
+        typeof currentPlayer !== "undefined" &&
+        currentPlayer
     ) {
+        candidates.push(currentPlayer);
+    }
 
-        console.error(
-            "HOST GAMEPLAY: openPlayerGame() is unavailable. " +
-            "Make sure host-gameplay.js is loaded after player.js."
+    for (const key of [
+        "findItCurrentPlayer",
+        "findItPlayer"
+    ]) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw) candidates.push(JSON.parse(raw));
+        } catch (error) {
+            console.warn(
+                "HOST GAMEPLAY: Could not recover player from",
+                key,
+                error
+            );
+        }
+    }
+
+    if (expectedHostId) {
+        const exact = candidates.find(function(candidate) {
+            return hostGameplayPlayerId(candidate) === expectedHostId;
+        });
+        if (exact) return exact;
+    }
+
+    return candidates.find(function(candidate) {
+        return !!hostGameplayPlayerId(candidate);
+    }) || null;
+}
+
+
+/* =========================================================
+   FETCH HOST PLAYER IF RUNTIME STATE IS MISSING
+========================================================= */
+
+async function fetchHostGameplayPlayer(game) {
+
+    const gameCode = hostGameplayGameCode(game);
+    const hostId = String(
+        game &&
+        (game.hostPlayerId || game.HostPlayerID) ||
+        ""
+    ).trim();
+
+    if (!gameCode || typeof window.apiGet !== "function") {
+        return null;
+    }
+
+    try {
+        const result = await window.apiGet(
+            "getPlayers",
+            { gameCode: gameCode }
         );
 
+        const players = Array.isArray(result)
+            ? result
+            : (
+                result && Array.isArray(result.players)
+                    ? result.players
+                    : []
+            );
+
+        if (hostId) {
+            const host = players.find(function(player) {
+                return hostGameplayPlayerId(player) === hostId;
+            });
+            if (host) return host;
+        }
+
+        return players.find(function(player) {
+            return !!(
+                player &&
+                (player.isHost === true || player.IsHost === true)
+            );
+        }) || null;
+
+    } catch (error) {
+        console.error(
+            "HOST GAMEPLAY: Could not fetch host player:",
+            error
+        );
+        return null;
+    }
+}
+
+
+/* =========================================================
+   ENTER PLAYER GAMEPLAY
+========================================================= */
+
+async function enterHostPlayerGameplay(game) {
+
+    if (hostGameplayBridgeBusy || hostGameplayEntered) {
         return;
     }
 
-    console.log(
-        "HOST GAMEPLAY: Handing host to openPlayerGame:",
-        {
-            gameCode: game.gameCode,
-            playerId: player.playerId,
-            playerName: player.playerName || "",
-            isHost: true
-        }
-    );
+    hostGameplayBridgeBusy = true;
 
     try {
+        const gameCode = hostGameplayGameCode(game);
+
+        if (!gameCode) {
+            console.error(
+                "HOST GAMEPLAY: Cannot enter gameplay - no game code.",
+                game
+            );
+            return;
+        }
+
+        let player = recoverHostGameplayPlayer(game);
+
+        if (!player || !hostGameplayPlayerId(player)) {
+            console.log(
+                "HOST GAMEPLAY: Host player missing locally; fetching players."
+            );
+            player = await fetchHostGameplayPlayer(game);
+        }
+
+        if (!player || !hostGameplayPlayerId(player)) {
+            console.error(
+                "HOST GAMEPLAY: Cannot enter gameplay - host player not found."
+            );
+            return;
+        }
+
+        if (typeof window.openPlayerGame !== "function") {
+            console.error(
+                "HOST GAMEPLAY: openPlayerGame() unavailable. " +
+                "Load host-gameplay.js after player.js."
+            );
+            return;
+        }
+
+        /* Stop Host.js status polling before player gameplay takes over. */
+        try {
+            if (typeof stopHostStatusPolling === "function") {
+                stopHostStatusPolling();
+            }
+            if (typeof stopHostLobbyPolling === "function") {
+                stopHostLobbyPolling();
+            }
+        } catch (error) {
+            console.warn(
+                "HOST GAMEPLAY: Could not stop old host polling:",
+                error
+            );
+        }
+
+        const normalisedGame = {
+            ...game,
+            gameCode: gameCode
+        };
+
+        const normalisedPlayer = {
+            ...player,
+            playerId: hostGameplayPlayerId(player),
+            gameCode: gameCode,
+            isHost: true
+        };
+
+        try {
+            hostGame = normalisedGame;
+            hostPlayer = normalisedPlayer;
+        } catch (error) {
+            console.warn(
+                "HOST GAMEPLAY: Could not repair Host.js state:",
+                error
+            );
+        }
+
+        console.log(
+            "HOST GAMEPLAY: PLAYING detected - entering player gameplay:",
+            {
+                gameCode: gameCode,
+                playerId: normalisedPlayer.playerId
+            }
+        );
+
+        hostGameplayEntered = true;
 
         await window.openPlayerGame(
-            game,
-            {
-                ...player,
-                gameCode:
-                    player.gameCode ||
-                    game.gameCode,
-                isHost: true
-            }
+            normalisedGame,
+            normalisedPlayer
         );
 
         console.log(
@@ -243,15 +310,82 @@ async function openHostPlaying() {
         );
 
     } catch (error) {
-
+        hostGameplayEntered = false;
         console.error(
-            "HOST GAMEPLAY: openPlayerGame failed:",
+            "HOST GAMEPLAY: Player gameplay entry failed:",
             error
         );
+    } finally {
+        hostGameplayBridgeBusy = false;
     }
 }
 
 
-/* Explicitly expose the corrected function. */
-window.openHostPlaying =
-    openHostPlaying;
+/* =========================================================
+   CORRECTED openHostPlaying
+========================================================= */
+
+async function correctedOpenHostPlaying() {
+
+    console.log(
+        "HOST GAMEPLAY: openHostPlaying bridge invoked."
+    );
+
+    const game = recoverHostGameplayGame();
+
+    if (!game) {
+        console.error(
+            "HOST GAMEPLAY: openHostPlaying has no host game."
+        );
+        return;
+    }
+
+    await enterHostPlayerGameplay(game);
+}
+
+window.openHostPlaying = correctedOpenHostPlaying;
+
+
+/* =========================================================
+   INDEPENDENT PLAYING WATCH
+
+   Host.js is currently capable of remaining in its own
+   getGame polling loop. This watcher deliberately observes
+   hostGame and takes over as soon as PLAYING is visible.
+   It does NOT make another getGame request.
+========================================================= */
+
+function hostGameplayBridgeTick() {
+
+    if (hostGameplayEntered || hostGameplayBridgeBusy) {
+        return;
+    }
+
+    const game = recoverHostGameplayGame();
+
+    if (!game) {
+        return;
+    }
+
+    const status = String(
+        game.status || game.Status || ""
+    ).trim().toUpperCase();
+
+    if (status !== "PLAYING") {
+        return;
+    }
+
+    console.log(
+        "HOST GAMEPLAY: Watcher detected PLAYING."
+    );
+
+    enterHostPlayerGameplay(game);
+}
+
+hostGameplayBridgeTimer = window.setInterval(
+    hostGameplayBridgeTick,
+    250
+);
+
+/* Also check immediately in case this file loads after PLAYING. */
+hostGameplayBridgeTick();
