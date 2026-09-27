@@ -834,6 +834,10 @@ data
 
 SUBMIT PHOTO ENTRY
 
+TEMPORARY DIAGNOSTIC ROUTE:
+submitEntryWithDiagnostics() reports the exact Games-sheet
+status details when a submission is rejected.
+
 --------------------------------------------------- */
 
 
@@ -842,14 +846,14 @@ case "submitEntry":
 
 console.log(
 
-"ROUTING TO submitEntry"
+"ROUTING TO submitEntryWithDiagnostics"
 
 );
 
 
 return jsonResponse(
 
-submitEntry(
+submitEntryWithDiagnostics(
 
 data
 
