@@ -1,3 +1,13 @@
+function prefillGameCodeFromQr() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const code = String(params.get("gameCode") || params.get("code") || "").trim().toUpperCase();
+        if (!code) return;
+        const input = document.getElementById("gameCodeInput");
+        if (input) input.value = code;
+    } catch (error) { console.warn("QR: Could not read game code:", error); }
+}
+
 /* ==================================================
    FIND IT!
    app.js
@@ -25,6 +35,8 @@ document.addEventListener(
 document.addEventListener(
     "DOMContentLoaded",
     function () {
+
+    prefillGameCodeFromQr();
 
         console.log(
             "SPLASH: Checking for saved winning photo..."
