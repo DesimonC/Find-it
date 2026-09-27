@@ -1,0 +1,45 @@
+/* =========================================================
+   FIND IT! - COLOURFUL BACKGROUND LAYER
+   Load after Style.css so this safely overrides backgrounds.
+========================================================= */
+
+html,
+body,
+#app {
+    min-height: 100%;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(255, 193, 7, .35), transparent 30%),
+        radial-gradient(circle at 85% 20%, rgba(0, 200, 83, .32), transparent 32%),
+        radial-gradient(circle at 20% 85%, rgba(41, 121, 255, .38), transparent 34%),
+        radial-gradient(circle at 85% 80%, rgba(213, 0, 249, .30), transparent 32%),
+        linear-gradient(135deg, #17103a 0%, #102a43 45%, #28113f 100%);
+    background-attachment: fixed;
+}
+
+.screen {
+    background: transparent;
+}
+
+/* Keep the splash photo system intact while giving a fresh game
+   a colourful background before a winning photo is available. */
+#splash {
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 193, 7, .30), transparent 30%),
+        radial-gradient(circle at 80% 25%, rgba(0, 230, 118, .25), transparent 30%),
+        radial-gradient(circle at 25% 80%, rgba(41, 121, 255, .35), transparent 35%),
+        linear-gradient(145deg, #1b103d, #102f46 55%, #341342);
+}
+
+/* Slight glass effect so controls stay readable over the colour. */
+.setup-card,
+.game-code-card,
+.players-card,
+.host-control-card,
+.panel,
+.host-panel,
+.host-section,
+.camera-container {
+    background: rgba(25, 25, 35, .88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
