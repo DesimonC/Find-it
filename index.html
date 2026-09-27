@@ -353,6 +353,13 @@
 
                 </div>
 
+                <div class="game-code-card" id="hostQrCard">
+                    <span>Join by QR code</span>
+                    <div id="hostQrCode" style="margin:15px auto;display:flex;justify-content:center;"></div>
+                    <p>Players can scan this with their phone.</p>
+                    <button id="generateQrButton" class="secondary-button large-button" type="button">Generate QR Code</button>
+                </div>
+
 
                 <div class="players-card">
 
@@ -1129,6 +1136,7 @@
         JAVASCRIPT
         ================================================== -->
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="config.js"></script>
     <script src="api.js"></script>
     <script src="utils.js"></script>
