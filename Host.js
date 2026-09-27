@@ -729,6 +729,43 @@ async function hostCreateGame() {
 }
 
 
+function generateHostQr() {
+
+    const code =
+        String(hostGameCode || "").trim().toUpperCase();
+
+    const container =
+        document.getElementById("hostQrCode");
+
+    if (!code || !container) {
+        return;
+    }
+
+    if (typeof QRCode === "undefined") {
+        alert("QR code generator is not available.");
+        return;
+    }
+
+    const url =
+        new URL(window.location.href);
+
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("gameCode", code);
+
+    container.innerHTML = "";
+
+    new QRCode(container, {
+        text: url.toString(),
+        width: 220,
+        height: 220,
+        correctLevel: QRCode.CorrectLevel.M
+    });
+
+    console.log("HOST: QR code generated:", url.toString());
+}
+
+
 /* =========================================================
    OPEN LOBBY
 ========================================================= */
@@ -2400,6 +2437,24 @@ function setupHostEvents() {
 
 
     /* -----------------------------------------------------
+       GENERATE QR CODE
+    ----------------------------------------------------- */
+
+    const qrButton =
+        document.getElementById("generateQrButton");
+
+    if (qrButton && qrButton.dataset.hostBound !== "true") {
+
+        qrButton.dataset.hostBound = "true";
+
+        qrButton.addEventListener("click", function(event) {
+            event.preventDefault();
+            generateHostQr();
+        });
+    }
+
+
+    /* -----------------------------------------------------
        START GAME
     ----------------------------------------------------- */
 
@@ -2586,6 +2641,9 @@ window.hostCreateGame =
 
 window.openHostLobby =
     openHostLobby;
+
+window.generateHostQr =
+    generateHostQr;
 
 window.refreshHostLobby =
     refreshHostLobby;
