@@ -32,6 +32,58 @@ function stopPlayerGameplayStatusPolling(){
  }catch(error){}
 }
 
+/* =========================================================
+   PREPARE VOTING SESSION
+
+   voting.js requires both gameCode and playerId.  Keep the
+   live gameplay objects authoritative and mirror them into
+   the same localStorage keys voting.js already understands.
+========================================================= */
+function preparePlayerVotingSession(){
+ const gameCode=String(currentPlayerGame&&(currentPlayerGame.gameCode||currentPlayerGame.GameCode)||"").trim().toUpperCase();
+
+ if(!currentPlayer)currentPlayer={};
+
+ let playerId=String(currentPlayer.playerId||currentPlayer.PlayerID||currentPlayer.id||"").trim();
+
+ /* Host is also a player.  If the host bridge supplied a game
+    but the local player object lost its id, recover the host id
+    from the game rather than entering voting with a blank id. */
+ if(!playerId&&currentPlayerGame){
+  const hostId=String(currentPlayerGame.hostPlayerId||currentPlayerGame.HostPlayerID||"").trim();
+  if(hostId&&(currentPlayer.isHost===true||!currentPlayer.playerId)){
+   playerId=hostId;
+   currentPlayer.playerId=hostId;
+   currentPlayer.isHost=true;
+  }
+ }
+
+ if(gameCode){
+  currentPlayer.gameCode=gameCode;
+  try{
+   localStorage.setItem("findItGameCode",gameCode);
+   localStorage.setItem("gameCode",gameCode);
+  }catch(error){
+   console.warn("PLAYER GAMEPLAY: Could not persist voting game code",error);
+  }
+ }
+
+ if(playerId)currentPlayer.playerId=playerId;
+
+ try{
+  localStorage.setItem("findItCurrentPlayer",JSON.stringify(currentPlayer));
+  localStorage.setItem("findItPlayer",JSON.stringify(currentPlayer));
+  if(currentPlayerGame)localStorage.setItem("findItGame",JSON.stringify(currentPlayerGame));
+ }catch(error){
+  console.warn("PLAYER GAMEPLAY: Could not persist voting player session",error);
+ }
+
+ if(typeof savePlayerSession==="function")savePlayerSession();
+
+ console.log("PLAYER GAMEPLAY: Voting session prepared",{gameCode:gameCode,playerId:playerId,isHost:currentPlayer.isHost===true});
+ return !!(gameCode&&playerId);
+}
+
 async function playerGameplayStatusPoll(){
  if(playerGameplayStatusPolling)return;
  if(!currentPlayerGame||!currentPlayerGame.gameCode)return;
@@ -67,6 +119,10 @@ async function playerGameplayStatusPoll(){
 
   if(currentPlayerGame.status==="VOTING"){
    playerGameplayOpen=false;
+   if(!preparePlayerVotingSession()){
+    console.error("PLAYER GAMEPLAY: Cannot enter voting - missing game code or player id",{game:currentPlayerGame,player:currentPlayer});
+    return;
+   }
    if(typeof openVoting==="function")await openVoting();
    else if(typeof openVotingScreen==="function")await openVotingScreen();
    else if(typeof window.showScreen==="function")window.showScreen("votingScreen");
@@ -108,6 +164,7 @@ async function openPlayerGameplay(game,player){
   return;
  }
  if(currentPlayerGame.hostPlayerId&&String(currentPlayer.playerId).trim().toUpperCase()===String(currentPlayerGame.hostPlayerId).trim().toUpperCase())currentPlayer.isHost=true;
+ currentPlayer.gameCode=currentPlayerGame.gameCode;
  if(typeof savePlayerSession==="function")savePlayerSession();
 
  if(currentPlayerGame.status==="PLAYING"||currentPlayerGame.status==="SCORING"){
@@ -116,6 +173,8 @@ async function openPlayerGameplay(game,player){
   }
   playerGameplayOpen=true;
   await window.openPlayerCollectionScreen(currentPlayerGame,currentPlayer);
+ }else if(currentPlayerGame.status==="VOTING"){
+  if(preparePlayerVotingSession()&&typeof openVoting==="function")await openVoting();
  }
  startPlayerGameplayStatusPolling();
  console.log("PLAYER GAMEPLAY: Gameplay initialised.");
@@ -125,8 +184,10 @@ window.openPlayerGame=openPlayerGameplay;
 window.playerGameplayStatusPoll=playerGameplayStatusPoll;
 window.startPlayerGameplayStatusPolling=startPlayerGameplayStatusPolling;
 window.stopPlayerGameplayStatusPolling=stopPlayerGameplayStatusPolling;
+window.preparePlayerVotingSession=preparePlayerVotingSession;
 
 console.log("PLAYER GAMEPLAY: exports ready:",{
  openPlayerGame:typeof window.openPlayerGame,
- playerGameplayStatusPoll:typeof window.playerGameplayStatusPoll
+ playerGameplayStatusPoll:typeof window.playerGameplayStatusPoll,
+ preparePlayerVotingSession:typeof window.preparePlayerVotingSession
 });
