@@ -1,12 +1,18 @@
 /* =========================================================
    FIND IT! - voting.js
-   PHOTO VOTING
+   VOTING SCREEN
 
-   RULES
+   FLOW
+   - All submitted entries remain visible as cards.
    - One vote per player per challenge.
-   - A player may vote for their own photo once per game.
-   - After that self-vote is used, their own photo remains
-     visible but its vote button is disabled.
+   - One self-vote per player across the whole game.
+   - After a self-vote is used, later own photos remain visible
+     but their vote buttons are disabled.
+   - A player who has voted in every challenge stays on the
+     voting screen and waits for everybody else.
+   - The backend submitVote response is authoritative for
+     votingComplete. We also poll final vote totals so players
+     who finish early can observe global completion.
 ========================================================= */
 
 console.log("Find It! voting.js loaded");
@@ -21,6 +27,7 @@ let votingCompleting = false;
 let submittedVoteCategories = {};
 let selfVoteUsed = false;
 let finalVotingResults = null;
+let votingRequiredTotal = 0;
 const votingPhotoCache = {};
 
 function getVotingCurrentPlayer() {
@@ -66,23 +73,38 @@ function getVotingPlayerName() {
     return String(player && (player.playerName || player.PlayerName || player.name) || "").trim();
 }
 
-function getSelfVoteStorageKey() {
-    return "findItSelfVoteUsed:" + getVotingGameCode() + ":" + getVotingPlayerId();
+function voteStateKey() {
+    return "findItVotingState:" + getVotingGameCode() + ":" + getVotingPlayerId();
 }
 
-function loadSelfVoteState() {
+function loadLocalVoteState() {
+    submittedVoteCategories = {};
+    selfVoteUsed = false;
     try {
-        selfVoteUsed = localStorage.getItem(getSelfVoteStorageKey()) === "true";
-    } catch (_) {
-        selfVoteUsed = false;
+        const raw = localStorage.getItem(voteStateKey());
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (saved && saved.categories && typeof saved.categories === "object") {
+            submittedVoteCategories = saved.categories;
+        }
+        selfVoteUsed = !!(saved && saved.selfVoteUsed);
+    } catch (error) {
+        console.warn("VOTING: could not restore local vote state", error);
     }
-    return selfVoteUsed;
+}
+
+function saveLocalVoteState() {
+    try {
+        localStorage.setItem(voteStateKey(), JSON.stringify({
+            categories: submittedVoteCategories,
+            selfVoteUsed: selfVoteUsed
+        }));
+    } catch (_) {}
 }
 
 function markSelfVoteUsed() {
     selfVoteUsed = true;
-    try { localStorage.setItem(getSelfVoteStorageKey(), "true"); } catch (_) {}
-    console.log("VOTING: self-vote allowance has now been used.");
+    saveLocalVoteState();
 }
 
 function hideVotingLoadingMessage() {
@@ -133,7 +155,7 @@ function normaliseVotingEntry(entry) {
         playerId: entry.playerId || entry.PlayerID || "",
         playerName: entry.playerName || entry.PlayerName || entry.name || "Player",
         categoryId: entry.categoryId || entry.CategoryID || "",
-        categoryNumber: entry.categoryNumber || entry.CategoryNumber || "",
+        categoryNumber: Number(entry.categoryNumber || entry.CategoryNumber || 0),
         categoryName: entry.categoryName || entry.CategoryName || entry.description || entry.Description || "",
         status: String(entry.status || entry.Status || "").trim().toUpperCase(),
         photoId: cleanVotingPhotoId(entry.photoId || entry.PhotoID || ""),
@@ -158,18 +180,27 @@ function hasVotedCategory(categoryKey) {
 function markCategoryVoted(categoryKey) {
     categoryKey = String(categoryKey || "").trim();
     if (categoryKey) submittedVoteCategories[categoryKey] = true;
+    saveLocalVoteState();
 }
 
-async function loadVotingPhoto(imageElement, photoId) {
-    photoId = cleanVotingPhotoId(photoId);
-    if (!imageElement || !photoId) return false;
+async function loadVotingPhoto(imageElement, entry) {
+    if (!imageElement || !entry) return false;
+    const directUrl = String(entry.photoUrl || "").trim();
+    if (directUrl) {
+        imageElement.src = directUrl;
+        return true;
+    }
+    const photoId = cleanVotingPhotoId(entry.photoId);
+    if (!photoId) return false;
     if (votingPhotoCache[photoId]) {
         imageElement.src = votingPhotoCache[photoId];
         return true;
     }
     try {
         const result = await apiGet("getPhoto", { photoId });
-        if (!result || result.success === false || !result.base64) throw new Error(result && (result.error || result.message) || "Photo unavailable");
+        if (!result || result.success === false || !result.base64) {
+            throw new Error(result && (result.error || result.message) || "Photo unavailable");
+        }
         const dataUrl = "data:" + (result.mimeType || result.mime || "image/jpeg") + ";base64," + result.base64;
         votingPhotoCache[photoId] = dataUrl;
         if (imageElement.isConnected) imageElement.src = dataUrl;
@@ -183,7 +214,7 @@ async function loadVotingPhoto(imageElement, photoId) {
 
 function createVotingPhotoCard(entry, currentPlayerId) {
     const card = document.createElement("div");
-    card.className = "findit-photo-card";
+    card.className = "findit-photo-card voting-entry-card";
 
     const playerId = String(entry.playerId || "").trim();
     const playerName = entry.playerName || "Player";
@@ -192,26 +223,19 @@ function createVotingPhotoCard(entry, currentPlayerId) {
 
     const wrapper = document.createElement("div");
     wrapper.className = "findit-photo-wrapper";
-    const photoId = cleanVotingPhotoId(entry.photoId);
-    if (photoId) {
-        const image = document.createElement("img");
-        image.className = "findit-photo";
-        image.alt = "Voting photo";
-        image.loading = "eager";
-        image.style.width = "100%";
-        image.style.height = "auto";
-        wrapper.appendChild(image);
-        loadVotingPhoto(image, photoId);
-    } else {
-        const missing = document.createElement("div");
-        missing.className = "voting-photo-missing";
-        missing.textContent = "📷 Photo unavailable";
-        wrapper.appendChild(missing);
-    }
+    const image = document.createElement("img");
+    image.className = "findit-photo";
+    image.alt = "Entry by " + playerName;
+    image.loading = "eager";
+    image.style.width = "100%";
+    image.style.height = "auto";
+    wrapper.appendChild(image);
     card.appendChild(wrapper);
+    loadVotingPhoto(image, entry);
 
     const details = document.createElement("div");
     details.className = "findit-photo-details";
+
     const player = document.createElement("div");
     player.className = "findit-photo-player";
     player.textContent = playerName;
@@ -220,29 +244,31 @@ function createVotingPhotoCard(entry, currentPlayerId) {
     if (isOwnPhoto) {
         const own = document.createElement("div");
         own.className = "findit-own-photo";
-        own.textContent = selfVoteUsed ? "Your photo • self-vote already used" : "Your photo • self-vote available";
+        own.textContent = selfVoteUsed
+            ? "Your photo • self-vote already used"
+            : "Your photo • self-vote available";
         details.appendChild(own);
     }
     card.appendChild(details);
 
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "findit-photo-action";
+    button.className = "findit-photo-action voting-entry-vote";
 
     if (hasVotedCategory(categoryKey)) {
         button.disabled = true;
-        button.textContent = "✓ Vote recorded";
+        button.textContent = "✓ Vote cast for this challenge";
     } else if (isOwnPhoto && selfVoteUsed) {
         button.disabled = true;
         button.textContent = "Self-vote already used";
         button.classList.add("self-vote-disabled");
-        button.setAttribute("aria-disabled", "true");
     } else {
-        button.textContent = isOwnPhoto ? "🏆 VOTE FOR YOUR PHOTO" : "🏆 VOTE";
+        button.textContent = isOwnPhoto ? "VOTE FOR YOUR PHOTO" : "VOTE";
         button.addEventListener("click", event => {
             event.preventDefault();
             event.stopPropagation();
-            if (votingBusy || votingFinished || votingCompleting || hasVotedCategory(categoryKey)) return;
+            if (votingBusy || votingFinished || votingCompleting) return;
+            if (hasVotedCategory(categoryKey)) return;
             if (isOwnPhoto && selfVoteUsed) return;
             castVote(entry, button);
         });
@@ -254,6 +280,50 @@ function createVotingPhotoCard(entry, currentPlayerId) {
     }
     card.appendChild(button);
     return card;
+}
+
+function groupVotingEntries(entries) {
+    const categories = {};
+    entries.forEach(entry => {
+        const key = getVotingCategoryKey(entry) || "unknown";
+        if (!categories[key]) categories[key] = [];
+        categories[key].push(entry);
+    });
+    return Object.keys(categories)
+        .sort((a, b) => Number(categories[a][0].categoryNumber || 0) - Number(categories[b][0].categoryNumber || 0))
+        .map(key => ({ key, entries: categories[key] }));
+}
+
+function ensureVotingWaitingMessage() {
+    let message = document.getElementById("votingWaitingMessage");
+    if (message) return message;
+    message = document.createElement("div");
+    message.id = "votingWaitingMessage";
+    message.className = "voting-waiting-message";
+    message.style.display = "none";
+    message.style.textAlign = "center";
+    message.style.padding = "18px";
+    message.style.fontWeight = "700";
+    const cards = document.getElementById("votingCards");
+    if (cards && cards.parentNode) cards.parentNode.insertBefore(message, cards.nextSibling);
+    return message;
+}
+
+function updateVotingPlayerProgress(categoryGroups) {
+    const total = categoryGroups.length;
+    const voted = categoryGroups.filter(group => hasVotedCategory(group.key)).length;
+    const progress = document.getElementById("votingProgress") || document.getElementById("votingProgressText");
+    if (progress) progress.textContent = voted + " / " + total;
+
+    const waiting = ensureVotingWaitingMessage();
+    if (waiting) {
+        if (total > 0 && voted >= total && !votingFinished) {
+            waiting.textContent = "Your votes are complete. Waiting for the other players…";
+            waiting.style.display = "block";
+        } else {
+            waiting.style.display = "none";
+        }
+    }
 }
 
 function renderVoting(entries) {
@@ -268,33 +338,31 @@ function renderVoting(entries) {
         return;
     }
 
-    const categories = {};
-    entries.forEach(entry => {
-        const key = getVotingCategoryKey(entry) || "unknown";
-        if (!categories[key]) categories[key] = [];
-        categories[key].push(entry);
-    });
+    const groups = groupVotingEntries(entries);
+    updateVotingPlayerProgress(groups);
 
-    const keys = Object.keys(categories).sort((a, b) => {
-        const ea = categories[a][0], eb = categories[b][0];
-        return Number(ea.categoryNumber || 0) - Number(eb.categoryNumber || 0);
-    });
+    groups.forEach(group => {
+        const first = group.entries[0];
+        const section = document.createElement("section");
+        section.className = "voting-category-section";
 
-    const progress = document.getElementById("votingProgress") || document.getElementById("votingProgressText");
-    if (progress) progress.textContent = Object.keys(submittedVoteCategories).length + " / " + keys.length;
-
-    keys.forEach(categoryKey => {
-        const categoryEntries = categories[categoryKey];
-        const first = categoryEntries[0];
         const title = document.createElement("div");
         title.className = "voting-category-title";
         title.textContent = "Challenge " + (first.categoryNumber || "") + (first.categoryName ? " • " + first.categoryName : "");
-        container.appendChild(title);
+        section.appendChild(title);
+
+        if (hasVotedCategory(group.key)) {
+            const done = document.createElement("div");
+            done.className = "voting-category-complete";
+            done.textContent = "✓ Your vote has been cast for this challenge";
+            section.appendChild(done);
+        }
 
         const grid = document.createElement("div");
         grid.className = "findit-photo-grid";
-        categoryEntries.forEach(entry => grid.appendChild(createVotingPhotoCard(entry, getVotingPlayerId())));
-        container.appendChild(grid);
+        group.entries.forEach(entry => grid.appendChild(createVotingPhotoCard(entry, getVotingPlayerId())));
+        section.appendChild(grid);
+        container.appendChild(section);
     });
 }
 
@@ -307,25 +375,20 @@ function disableAllVotingButtons(text) {
     });
 }
 
-function restoreVotingButtons() {
-    if (votingFinished || votingCompleting) return;
-    loadVotingData();
-}
-
 async function castVote(entry, voteButton) {
     if (votingBusy || votingFinished || votingCompleting) return;
+
     const gameCode = requireVotingGameCode();
     const playerId = getVotingPlayerId();
-    const entryId = String(entry && (entry.entryId || entry.EntryID || entry.id) || "").trim();
-    const categoryId = String(entry && (entry.categoryId || entry.CategoryID) || "").trim();
-    const categoryNumber = Number(entry && (entry.categoryNumber || entry.CategoryNumber || 0));
+    const entryId = String(entry && entry.entryId || "").trim();
+    const categoryId = String(entry && entry.categoryId || "").trim();
+    const categoryNumber = Number(entry && entry.categoryNumber || 0);
     const categoryKey = getVotingCategoryKey(entry);
     const isSelfVote = String(entry && entry.playerId || "").trim() === playerId;
 
     if (hasVotedCategory(categoryKey)) return;
     if (isSelfVote && selfVoteUsed) {
         alert("You have already used your one self-vote. Please choose another player's photo.");
-        await loadVotingData();
         return;
     }
     if (!playerId || !entryId || !categoryId) {
@@ -335,18 +398,40 @@ async function castVote(entry, voteButton) {
 
     votingBusy = true;
     disableAllVotingButtons("Voting...");
+
     try {
-        const result = await apiPost("submitVote", { gameCode, playerId, entryId, categoryId, categoryNumber });
-        if (!result || result.success !== true) throw new Error(result && (result.message || result.error) || "Vote could not be submitted.");
+        const result = await apiPost("submitVote", {
+            gameCode,
+            playerId,
+            entryId,
+            categoryId,
+            categoryNumber
+        });
+
+        if (!result || result.success !== true) {
+            throw new Error(result && (result.message || result.error) || "Vote could not be submitted.");
+        }
 
         markCategoryVoted(categoryKey);
         if (isSelfVote) markSelfVoteUsed();
+
+        votingRequiredTotal = Number(result.votesRequired || votingRequiredTotal || 0);
+
+        console.log("VOTING: vote accepted", {
+            categoryId,
+            votesReceived: result.votesReceived,
+            votesRequired: result.votesRequired,
+            votingComplete: result.votingComplete
+        });
+
         if (voteButton) voteButton.textContent = "✓ Vote recorded";
 
+        /* Backend is authoritative for global completion. */
         if (result.votingComplete === true) {
             await handleVotingComplete();
             return;
         }
+
         await loadVotingData();
     } catch (error) {
         console.error("CAST VOTE ERROR:", error);
@@ -357,19 +442,60 @@ async function castVote(entry, voteButton) {
     }
 }
 
+async function getGlobalVotingCompletion(entries) {
+    const gameCode = requireVotingGameCode();
+    try {
+        const [results, playersResult] = await Promise.all([
+            apiGet("getVotingResults", { gameCode }),
+            apiGet("getPlayers", { gameCode })
+        ]);
+
+        if (!results || results.success === false) return false;
+
+        const players = Array.isArray(playersResult)
+            ? playersResult
+            : (playersResult && Array.isArray(playersResult.players) ? playersResult.players : []);
+
+        const groups = groupVotingEntries(entries);
+        const required = players.length * groups.length;
+        const received = Number(results.totalVotes || 0);
+        votingRequiredTotal = required;
+
+        console.log("VOTING: global progress", {
+            votesReceived: received,
+            votesRequired: required
+        });
+
+        return required > 0 && received >= required;
+    } catch (error) {
+        console.warn("VOTING: global completion check failed", error);
+        return false;
+    }
+}
+
 async function loadVotingData() {
     if (votingFinished || votingCompleting || votingLoading) return;
     const gameCode = activeVotingGameCode || getVotingGameCode();
     if (!gameCode) return;
+
     votingLoading = true;
     try {
         const result = await apiGet("getEntries", { gameCode });
-        if (result && result.votingComplete === true) {
-            await handleVotingComplete();
-            return;
-        }
-        const entries = extractVotingEntries(result).map(normaliseVotingEntry).filter(entry => entry && entry.status !== "REJECTED");
+        const entries = extractVotingEntries(result)
+            .map(normaliseVotingEntry)
+            .filter(entry => entry && entry.status !== "REJECTED");
+
         renderVoting(entries);
+
+        /*
+           submitVote/getVotingProgress is the authoritative backend
+           completion decision for the final vote. This polling check
+           lets players who finished earlier observe the same completed
+           total and move to the winners flow without refreshing.
+        */
+        if (entries.length && await getGlobalVotingCompletion(entries)) {
+            await handleVotingComplete();
+        }
     } catch (error) {
         console.error("LOAD VOTING DATA ERROR:", error);
         const container = document.getElementById("votingCards");
@@ -381,29 +507,50 @@ async function loadVotingData() {
 
 async function requestFinalVotingResults(gameCode) {
     const result = await apiGet("getVotingResults", { gameCode });
-    if (!result || result.success === false) throw new Error(result && (result.message || result.error) || "Unable to load voting results.");
+    if (!result || result.success === false) {
+        throw new Error(result && (result.message || result.error) || "Unable to load voting results.");
+    }
     return result.data && typeof result.data === "object" ? result.data : result;
 }
 
 async function handleVotingComplete() {
     if (votingFinished || votingCompleting) return;
+
     votingCompleting = true;
     votingFinished = true;
     votingScreenOpen = false;
     stopVotingPolling();
     disableAllVotingButtons("✓ Voting complete");
+
+    const waiting = ensureVotingWaitingMessage();
+    if (waiting) {
+        waiting.textContent = "All votes are in. Preparing the winning photos…";
+        waiting.style.display = "block";
+    }
+
     try {
         const results = await requestFinalVotingResults(requireVotingGameCode());
         finalVotingResults = results;
         window.findItFinalVotingResults = results;
         window.findItOverallWinner = results.overallWinner || null;
-        window.findItWinningEntries = results.winningEntries || results.winnerEntries || [];
+        window.findItWinningEntries = results.winningEntries || results.winners || [];
         window.findItOverallWinningPhoto = results.overallWinningPhoto || null;
+
         if (typeof window.openHostWinnersControlScreen === "function") {
             window.openHostWinnersControlScreen(results);
+        } else if (typeof window.openWinnerRevealScreen === "function") {
+            window.openWinnerRevealScreen(results);
+        } else if (typeof window.showWinnerReveal === "function") {
+            window.showWinnerReveal(results);
+        } else {
+            console.log("VOTING: final results ready", results);
         }
     } catch (error) {
         console.error("FINAL WINNER CALCULATION ERROR:", error);
+        votingFinished = false;
+        votingScreenOpen = true;
+        if (waiting) waiting.textContent = "Votes are complete. Waiting for the results screen…";
+        startVotingPolling();
     } finally {
         votingCompleting = false;
     }
@@ -411,13 +558,15 @@ async function handleVotingComplete() {
 
 function startVotingPolling() {
     stopVotingPolling();
-    votingPollTimer = setInterval(() => {
-        if (votingScreenOpen && !votingBusy && !votingLoading && !votingFinished && !votingCompleting) loadVotingData();
-    }, 5000);
+    votingPollTimer = window.setInterval(() => {
+        if (votingScreenOpen && !votingBusy && !votingLoading && !votingFinished && !votingCompleting) {
+            loadVotingData();
+        }
+    }, 4000);
 }
 
 function stopVotingPolling() {
-    if (votingPollTimer) clearInterval(votingPollTimer);
+    if (votingPollTimer) window.clearInterval(votingPollTimer);
     votingPollTimer = null;
 }
 
@@ -429,12 +578,19 @@ function closeVoting() {
 async function openVoting() {
     if (votingFinished) return;
     const gameCode = requireVotingGameCode();
-    if (activeVotingGameCode && activeVotingGameCode !== gameCode) submittedVoteCategories = {};
+
+    if (activeVotingGameCode && activeVotingGameCode !== gameCode) {
+        submittedVoteCategories = {};
+        selfVoteUsed = false;
+    }
+
     activeVotingGameCode = gameCode;
-    loadSelfVoteState();
+    loadLocalVoteState();
     votingScreenOpen = true;
     votingCompleting = false;
+
     if (!forceVotingScreenVisible()) return;
+
     await loadVotingData();
     if (!votingFinished && !votingCompleting) startVotingPolling();
 }
@@ -449,11 +605,13 @@ function resetVotingState() {
     submittedVoteCategories = {};
     selfVoteUsed = false;
     finalVotingResults = null;
+    votingRequiredTotal = 0;
     Object.keys(votingPhotoCache).forEach(key => delete votingPhotoCache[key]);
     stopVotingPolling();
 }
 
 window.openVoting = openVoting;
+window.openVotingScreen = openVoting;
 window.loadVotingData = loadVotingData;
 window.renderVoting = renderVoting;
 window.createVotingPhotoCard = createVotingPhotoCard;
@@ -468,4 +626,4 @@ window.getFinalVotingResults = async function () {
     return finalVotingResults;
 };
 
-console.log("Find It! voting.js ready - one self-vote per player per game.");
+console.log("Find It! voting.js ready - card voting + global completion flow.");
