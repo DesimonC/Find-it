@@ -119,6 +119,7 @@ async function playerGameplayStatusPoll(){
 
   if(currentPlayerGame.status==="VOTING"){
    playerGameplayOpen=false;
+   stopPlayerGameplayStatusPolling();
    if(!preparePlayerVotingSession()){
     console.error("PLAYER GAMEPLAY: Cannot enter voting - missing game code or player id",{game:currentPlayerGame,player:currentPlayer});
     return;
@@ -174,7 +175,10 @@ async function openPlayerGameplay(game,player){
   playerGameplayOpen=true;
   await window.openPlayerCollectionScreen(currentPlayerGame,currentPlayer);
  }else if(currentPlayerGame.status==="VOTING"){
+  stopPlayerGameplayStatusPolling();
   if(preparePlayerVotingSession()&&typeof openVoting==="function")await openVoting();
+  console.log("PLAYER GAMEPLAY: Voting initialised; gameplay polling stopped.");
+  return;
  }
  startPlayerGameplayStatusPolling();
  console.log("PLAYER GAMEPLAY: Gameplay initialised.");
