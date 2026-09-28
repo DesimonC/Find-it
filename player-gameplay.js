@@ -31,9 +31,17 @@ function normaliseGameplayCategory(category){
 
 function gameplayIsHost(){
  if(!currentPlayer||!currentPlayerGame)return false;
- const playerId=String(currentPlayer.playerId||currentPlayer.PlayerID||"").trim();
- const hostId=String(currentPlayerGame.hostPlayerId||currentPlayerGame.HostPlayerID||"").trim();
- return !!(currentPlayer.isHost===true||(playerId&&hostId&&playerId===hostId));
+ const playerId=String(currentPlayer.playerId||currentPlayer.PlayerID||"").trim().toUpperCase();
+ const hostId=String(currentPlayerGame.hostPlayerId||currentPlayerGame.HostPlayerID||"").trim().toUpperCase();
+ const explicitHost=currentPlayer.isHost===true||String(currentPlayer.isHost||"").toLowerCase()==="true";
+ if(explicitHost)return true;
+ if(playerId&&hostId&&playerId===hostId)return true;
+ const players=Array.isArray(currentPlayerGame.players)?currentPlayerGame.players:[];
+ return players.some(function(p){
+  const id=String(p.playerId||p.PlayerID||"").trim().toUpperCase();
+  const isHost=p.isHost===true||String(p.isHost||"").toLowerCase()==="true";
+  return !!(playerId&&id===playerId&&isHost);
+ });
 }
 
 async function gameplayLoadPlayers(game,player){
@@ -56,7 +64,7 @@ async function gameplayLoadPlayers(game,player){
  if(player&&player.playerId&&!seen.has(player.playerId))addPlayer(player);
  merged.forEach(item=>{if(game.hostPlayerId&&String(item.playerId).trim()===String(game.hostPlayerId).trim())item.isHost=true;});
  game.players=merged;currentPlayerGame=game;
- if(currentPlayer&&currentPlayer.playerId&&game.hostPlayerId&&currentPlayer.playerId===game.hostPlayerId)currentPlayer.isHost=true;
+ if(currentPlayer&&currentPlayer.playerId&&game.hostPlayerId&&String(currentPlayer.playerId).trim().toUpperCase()===String(game.hostPlayerId).trim().toUpperCase())currentPlayer.isHost=true;
  return merged;
 }
 
@@ -81,6 +89,7 @@ async function gameplayLoadProgress(game,player){
  gameplaySubmittedPhotosById=new Map();
  gameplaySubmittedPhotosByNumber=new Map();
  if(!game||!game.gameCode||!player||!player.playerId)return;
+ const activePlayerId=String(player.playerId||player.PlayerID||"").trim().toUpperCase();
  async function addCompleted(action,collectionName){
   try{
    const result=await apiGet(action,{gameCode:game.gameCode});
@@ -88,8 +97,8 @@ async function gameplayLoadProgress(game,player){
    if(result&&Array.isArray(result[collectionName]))rows=result[collectionName];
    else if(Array.isArray(result))rows=result;
    rows.forEach(row=>{
-    const rowPlayerId=String(row.playerId||row.PlayerID||"").trim();
-    if(rowPlayerId!==player.playerId)return;
+    const rowPlayerId=String(row.playerId||row.PlayerID||"").trim().toUpperCase();
+    if(!rowPlayerId||rowPlayerId!==activePlayerId)return;
     const categoryId=row.categoryId??row.CategoryID??"";
     const categoryNumber=Number(row.categoryNumber??row.CategoryNumber??0);
     if(categoryId!=="")gameplayCompletedCategoryIds.add(String(categoryId));
@@ -150,7 +159,6 @@ async function gameplayStartVoting(){
   if(!result||result.success===false)throw new Error(result&&result.error?result.error:"Could not start voting.");
   console.log("PLAYER GAMEPLAY: startVoting accepted. Waiting for server VOTING status.",result);
   if(button)button.textContent="Waiting for Voting...";
-  /* Do not navigate here. The status poll owns the VOTING transition for everyone. */
   await playerGameplayStatusPoll();
  }catch(error){
   console.error("PLAYER GAMEPLAY: Start Voting failed:",error);
@@ -163,25 +171,30 @@ async function gameplayStartVoting(){
 function gameplayUpdateHostVotingControl(completedCount,total){
  const controls=document.getElementById("hostCollectionControls");
  const button=document.getElementById("scoreGameButton");
- if(!controls||!button)return;
+ if(!controls||!button){console.warn("PLAYER GAMEPLAY: Host voting controls missing from collection screen.");return;}
  const isHost=gameplayIsHost();
- const allComplete=total>0&&completedCount>=total;
- if(!isHost){controls.classList.add("hidden");controls.style.display="none";return;}
- controls.classList.remove("hidden");controls.style.display="";
- const card=controls.querySelector(".host-control-card");
- const text=card?card.querySelector("p"):null;
- if(allComplete){
-  if(text)text.textContent="All your challenges are complete. Start voting when you are ready to move everyone to the voting screen.";
-  button.textContent=gameplayStartVotingBusy?"Starting Voting...":"Start Voting";
-  button.disabled=gameplayStartVotingBusy;
-  button.onclick=function(event){event.preventDefault();gameplayStartVoting();};
-  button.style.display="";
- }else{
-  if(text)text.textContent="Complete all your challenges. The Start Voting button will appear when your collection is complete.";
+ const allComplete=total>0&&completedCount===total;
+ console.log("PLAYER GAMEPLAY: Host voting control:",{isHost,completedCount,total,allComplete,playerId:currentPlayer&&(currentPlayer.playerId||currentPlayer.PlayerID),hostPlayerId:currentPlayerGame&&(currentPlayerGame.hostPlayerId||currentPlayerGame.HostPlayerID)});
+ if(!isHost||!allComplete){
+  controls.classList.add("hidden");
+  controls.style.display="none";
   button.onclick=null;
   button.disabled=true;
   button.style.display="none";
+  return;
  }
+ controls.classList.remove("hidden");
+ controls.hidden=false;
+ controls.style.display="block";
+ const card=controls.querySelector(".host-control-card");
+ const text=card?card.querySelector("p"):null;
+ if(text)text.textContent="All your challenges are complete. Press Start Voting when you are ready.";
+ button.classList.remove("hidden");
+ button.hidden=false;
+ button.style.display="block";
+ button.textContent=gameplayStartVotingBusy?"Starting Voting...":"Start Voting";
+ button.disabled=gameplayStartVotingBusy;
+ button.onclick=function(event){event.preventDefault();gameplayStartVoting();};
 }
 
 function gameplayRenderCategoryCards(categories){
@@ -215,14 +228,13 @@ async function gameplayRefreshCategories(){if(!currentPlayerGame||!currentPlayer
 async function openGameplayCollectionScreen(game,player){
  currentPlayerGame=typeof normalisePlayerGame==="function"?normalisePlayerGame(game):game;
  currentPlayer=typeof normalisePlayer==="function"?normalisePlayer(player):player;
- if(currentPlayerGame.hostPlayerId&&currentPlayer.playerId===currentPlayerGame.hostPlayerId)currentPlayer.isHost=true;
+ if(currentPlayerGame.hostPlayerId&&String(currentPlayer.playerId).trim().toUpperCase()===String(currentPlayerGame.hostPlayerId).trim().toUpperCase())currentPlayer.isHost=true;
  console.log("PLAYER GAMEPLAY: Opening collection screen:",{gameCode:currentPlayerGame.gameCode,playerId:currentPlayer.playerId});
  await gameplayLoadPlayers(currentPlayerGame,currentPlayer);
  if(typeof savePlayerSession==="function")savePlayerSession();
  const nameElement=document.getElementById("collectionPlayerName");if(nameElement)nameElement.textContent=currentPlayer.playerName||"";
  await gameplayLoadCategories(currentPlayerGame);await gameplayLoadProgress(currentPlayerGame,currentPlayer);gameplayRenderCategoryCards(gameplayCategories);
  if(typeof window.showScreen==="function")window.showScreen("collectionScreen");else if(typeof showScreen==="function")showScreen("collectionScreen");else throw new Error("showScreen() is unavailable.");
- /* Legacy Host.js controls may run here; re-apply the new host-only voting contract afterwards. */
  if(typeof setupHostCollectionControls==="function")setupHostCollectionControls();
  if(typeof checkAndUpdateHostControls==="function")await checkAndUpdateHostControls();
  const completed=gameplayCategories.filter(gameplayCategoryComplete).length;
@@ -248,7 +260,6 @@ async function playerGameplayStatusPoll(){
   currentPlayerGame={...currentPlayerGame,...game};if(typeof savePlayerSession==="function")savePlayerSession();
   console.log("PLAYER GAMEPLAY: Game status:",currentPlayerGame.status);
   if(currentPlayerGame.status==="PLAYING"||currentPlayerGame.status==="SCORING"){
-   /* SCORING is retained as a legacy backend status, but it no longer changes screens. */
    if(playerGameplayPhotoFlowActive()){playerGameplayOpen=true;await gameplayRefreshCategories();return;}
    if(!playerGameplayOpen){playerGameplayOpen=true;await openGameplayCollectionScreen(currentPlayerGame,currentPlayer);}else await gameplayRefreshCategories();return;
   }
@@ -270,7 +281,7 @@ async function openPlayerGameplay(game,player){
  currentPlayerGame=typeof normalisePlayerGame==="function"?normalisePlayerGame(game):game;
  currentPlayer=typeof normalisePlayer==="function"?normalisePlayer(player):player;
  if(!currentPlayerGame||!currentPlayerGame.gameCode||!currentPlayer||!currentPlayer.playerId){console.error("PLAYER GAMEPLAY: Invalid normalised game/player state.");return;}
- if(currentPlayerGame.hostPlayerId&&currentPlayer.playerId===currentPlayerGame.hostPlayerId)currentPlayer.isHost=true;
+ if(currentPlayerGame.hostPlayerId&&String(currentPlayer.playerId).trim().toUpperCase()===String(currentPlayerGame.hostPlayerId).trim().toUpperCase())currentPlayer.isHost=true;
  if(typeof savePlayerSession==="function")savePlayerSession();
  if(currentPlayerGame.status==="PLAYING"||currentPlayerGame.status==="SCORING"){playerGameplayOpen=true;await openGameplayCollectionScreen(currentPlayerGame,currentPlayer);}
  startPlayerGameplayStatusPolling();console.log("PLAYER GAMEPLAY: Gameplay initialised.");
