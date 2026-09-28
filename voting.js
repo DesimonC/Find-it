@@ -505,57 +505,6 @@ async function loadVotingData() {
     }
 }
 
-async function requestFinalVotingResults(gameCode) {
-    const result = await apiGet("getVotingResults", { gameCode });
-    if (!result || result.success === false) {
-        throw new Error(result && (result.message || result.error) || "Unable to load voting results.");
-    }
-    return result.data && typeof result.data === "object" ? result.data : result;
-}
-
-async function handleVotingComplete() {
-    if (votingFinished || votingCompleting) return;
-
-    votingCompleting = true;
-    votingFinished = true;
-    votingScreenOpen = false;
-    stopVotingPolling();
-    disableAllVotingButtons("✓ Voting complete");
-
-    const waiting = ensureVotingWaitingMessage();
-    if (waiting) {
-        waiting.textContent = "All votes are in. Preparing the winning photos…";
-        waiting.style.display = "block";
-    }
-
-    try {
-        const results = await requestFinalVotingResults(requireVotingGameCode());
-        finalVotingResults = results;
-        window.findItFinalVotingResults = results;
-        window.findItOverallWinner = results.overallWinner || null;
-        window.findItWinningEntries = results.winningEntries || results.winners || [];
-        window.findItOverallWinningPhoto = results.overallWinningPhoto || null;
-
-        if (typeof window.openHostWinnersControlScreen === "function") {
-            window.openHostWinnersControlScreen(results);
-        } else if (typeof window.openWinnerRevealScreen === "function") {
-            window.openWinnerRevealScreen(results);
-        } else if (typeof window.showWinnerReveal === "function") {
-            window.showWinnerReveal(results);
-        } else {
-            console.log("VOTING: final results ready", results);
-        }
-    } catch (error) {
-        console.error("FINAL WINNER CALCULATION ERROR:", error);
-        votingFinished = false;
-        votingScreenOpen = true;
-        if (waiting) waiting.textContent = "Votes are complete. Waiting for the results screen…";
-        startVotingPolling();
-    } finally {
-        votingCompleting = false;
-    }
-}
-
 function startVotingPolling() {
     stopVotingPolling();
     votingPollTimer = window.setInterval(() => {
