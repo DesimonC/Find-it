@@ -1125,26 +1125,62 @@
     <!-- ==================================================
         JAVASCRIPT
         ================================================== -->
-<script src="api.js"></script>
+<!-- ==================================================
+     FIND IT! JAVASCRIPT LOADING ORDER
+     ================================================== -->
 
-<!-- Core player/session -->
+<!-- 1. CONFIGURATION -->
+<script src="config.js"></script>
+
+<!-- 2. CORE APP / API -->
+<script src="api.js"></script>
+<script src="app.js"></script>
+
+
+<!-- ==================================================
+     PLAYER
+     ================================================== -->
+
+<!-- 3. PLAYER SESSION / JOIN / REJOIN -->
 <script src="player.js"></script>
 
-<!-- Challenge / collection logic MUST precede gameplay -->
+<!-- 4. PLAYER COLLECTION / CHALLENGES -->
 <script src="player-collection.js"></script>
 
-<!-- Player status + screen transitions -->
+<!-- 5. PLAYER GAME STATUS / TRANSITIONS -->
 <script src="player-gameplay.js"></script>
 
-<!-- Photo flow -->
+
+<!-- ==================================================
+     PHOTO SYSTEM
+     ================================================== -->
+
+<!-- 6. SHARED PHOTO STATE -->
+<script src="photo-state.js"></script>
+
+<!-- 7. PHOTO CAPTURE / SELECTION / PREVIEW -->
 <script src="photos.js"></script>
+
+<!-- 8. PHOTO SUBMISSION -->
 <script src="photo-submit.js"></script>
 
-<!-- Host -->
+
+<!-- ==================================================
+     HOST
+     ================================================== -->
+
+<!-- 9. HOST SETUP / LOBBY / GAME CREATION -->
 <script src="Host.js"></script>
+
+<!-- 10. HOST → PLAYER GAMEPLAY BRIDGE -->
 <script src="host-gameplay.js"></script>
 
-<!-- Voting -->
+
+<!-- ==================================================
+     VOTING
+     ================================================== -->
+
+<!-- 11. VOTING -->
 <script src="voting.js"></script>
     <!-- ==================================================
         HOST BUTTON SAFETY BINDING
