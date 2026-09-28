@@ -1125,24 +1125,27 @@
     <!-- ==================================================
         JAVASCRIPT
         ================================================== -->
-
- <script src="config.js"></script>
 <script src="api.js"></script>
-<script src="utils.js"></script>
-<script src="app.js"></script>
-<script src="Host.js"></script>
-<script src="results.js"></script>
-    
 
-<script src="photo-state.js"></script>
+<!-- Core player/session -->
+<script src="player.js"></script>
+
+<!-- Challenge / collection logic MUST precede gameplay -->
+<script src="player-collection.js"></script>
+
+<!-- Player status + screen transitions -->
+<script src="player-gameplay.js"></script>
+
+<!-- Photo flow -->
 <script src="photos.js"></script>
 <script src="photo-submit.js"></script>
-<script src="player.js"></script>
-<script src="player-gameplay.js"></script>
+
+<!-- Host -->
+<script src="Host.js"></script>
 <script src="host-gameplay.js"></script>
 
+<!-- Voting -->
 <script src="voting.js"></script>
-
     <!-- ==================================================
         HOST BUTTON SAFETY BINDING
         This runs after every application script so the
