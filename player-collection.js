@@ -110,7 +110,6 @@ async function gameplayLoadProgress(game,player){
   }catch(error){console.error("PLAYER COLLECTION: Could not load "+action+":",error);}
  }
  await addCompleted("getEntries","entries");
- await addCompleted("getPasses","passes");
 }
 
 function gameplayCategoryComplete(category){
