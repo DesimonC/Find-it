@@ -16,6 +16,7 @@ let gameplayCompletedCategoryIds=new Set();
 let gameplayCompletedCategoryNumbers=new Set();
 let gameplaySubmittedPhotosById=new Map();
 let gameplaySubmittedPhotosByNumber=new Map();
+let gameplayStartVotingBusy=false;
 
 function normaliseGameplayCategory(category){
  category=category||{};
@@ -26,6 +27,13 @@ function normaliseGameplayCategory(category){
   description:category.description||category.Description||"",
   gameCode:String(category.gameCode||category.GameCode||"").trim().toUpperCase()
  };
+}
+
+function gameplayIsHost(){
+ if(!currentPlayer||!currentPlayerGame)return false;
+ const playerId=String(currentPlayer.playerId||currentPlayer.PlayerID||"").trim();
+ const hostId=String(currentPlayerGame.hostPlayerId||currentPlayerGame.HostPlayerID||"").trim();
+ return !!(currentPlayer.isHost===true||(playerId&&hostId&&playerId===hostId));
 }
 
 async function gameplayLoadPlayers(game,player){
@@ -129,12 +137,59 @@ function gameplayOpenCategory(category){
  if(typeof window.showScreen==="function")window.showScreen("photoUploadScreen");
 }
 
+async function gameplayStartVoting(){
+ if(gameplayStartVotingBusy||!gameplayIsHost()||!currentPlayerGame||!currentPlayerGame.gameCode)return;
+ const allComplete=gameplayCategories.length>0&&gameplayCategories.every(gameplayCategoryComplete);
+ if(!allComplete){console.warn("PLAYER GAMEPLAY: Start Voting blocked - host challenges are not complete.");return;}
+ const button=document.getElementById("scoreGameButton");
+ gameplayStartVotingBusy=true;
+ if(button){button.disabled=true;button.textContent="Starting Voting...";}
+ try{
+  console.log("PLAYER GAMEPLAY: Host requesting startVoting:",currentPlayerGame.gameCode);
+  const result=await apiPost("startVoting",{gameCode:currentPlayerGame.gameCode,playerId:currentPlayer.playerId});
+  if(!result||result.success===false)throw new Error(result&&result.error?result.error:"Could not start voting.");
+  console.log("PLAYER GAMEPLAY: startVoting accepted. Waiting for server VOTING status.",result);
+  if(button)button.textContent="Waiting for Voting...";
+  /* Do not navigate here. The status poll owns the VOTING transition for everyone. */
+  await playerGameplayStatusPoll();
+ }catch(error){
+  console.error("PLAYER GAMEPLAY: Start Voting failed:",error);
+  gameplayStartVotingBusy=false;
+  if(button){button.disabled=false;button.textContent="Start Voting";}
+  alert(error.message||"Could not start voting.");
+ }
+}
+
+function gameplayUpdateHostVotingControl(completedCount,total){
+ const controls=document.getElementById("hostCollectionControls");
+ const button=document.getElementById("scoreGameButton");
+ if(!controls||!button)return;
+ const isHost=gameplayIsHost();
+ const allComplete=total>0&&completedCount>=total;
+ if(!isHost){controls.classList.add("hidden");controls.style.display="none";return;}
+ controls.classList.remove("hidden");controls.style.display="";
+ const card=controls.querySelector(".host-control-card");
+ const text=card?card.querySelector("p"):null;
+ if(allComplete){
+  if(text)text.textContent="All your challenges are complete. Start voting when you are ready to move everyone to the voting screen.";
+  button.textContent=gameplayStartVotingBusy?"Starting Voting...":"Start Voting";
+  button.disabled=gameplayStartVotingBusy;
+  button.onclick=function(event){event.preventDefault();gameplayStartVoting();};
+  button.style.display="";
+ }else{
+  if(text)text.textContent="Complete all your challenges. The Start Voting button will appear when your collection is complete.";
+  button.onclick=null;
+  button.disabled=true;
+  button.style.display="none";
+ }
+}
+
 function gameplayRenderCategoryCards(categories){
  const container=document.getElementById("categoryCards");
  if(!container){console.error("PLAYER GAMEPLAY: #categoryCards not found.");return;}
  categories=Array.isArray(categories)?categories:gameplayCategories;
  container.innerHTML="";
- if(!categories.length){container.innerHTML='<div class="category-empty">No challenges were returned for this game.</div>';return;}
+ if(!categories.length){container.innerHTML='<div class="category-empty">No challenges were returned for this game.</div>';gameplayUpdateHostVotingControl(0,0);return;}
  let completedCount=0;
  categories.forEach(function(category,index){
   const complete=gameplayCategoryComplete(category),photoUrl=gameplayCategoryPhoto(category);
@@ -152,6 +207,7 @@ function gameplayRenderCategoryCards(categories){
  if(progressText)progressText.textContent=completedCount+" / "+total;
  const progressBar=document.getElementById("collectionProgressBar");
  if(progressBar){const percent=total>0?Math.round(completedCount/total*100):0;progressBar.style.width=percent+"%";}
+ gameplayUpdateHostVotingControl(completedCount,total);
 }
 
 async function gameplayRefreshCategories(){if(!currentPlayerGame||!currentPlayer)return;await gameplayLoadCategories(currentPlayerGame);await gameplayLoadProgress(currentPlayerGame,currentPlayer);gameplayRenderCategoryCards(gameplayCategories);}
@@ -166,8 +222,11 @@ async function openGameplayCollectionScreen(game,player){
  const nameElement=document.getElementById("collectionPlayerName");if(nameElement)nameElement.textContent=currentPlayer.playerName||"";
  await gameplayLoadCategories(currentPlayerGame);await gameplayLoadProgress(currentPlayerGame,currentPlayer);gameplayRenderCategoryCards(gameplayCategories);
  if(typeof window.showScreen==="function")window.showScreen("collectionScreen");else if(typeof showScreen==="function")showScreen("collectionScreen");else throw new Error("showScreen() is unavailable.");
+ /* Legacy Host.js controls may run here; re-apply the new host-only voting contract afterwards. */
  if(typeof setupHostCollectionControls==="function")setupHostCollectionControls();
  if(typeof checkAndUpdateHostControls==="function")await checkAndUpdateHostControls();
+ const completed=gameplayCategories.filter(gameplayCategoryComplete).length;
+ gameplayUpdateHostVotingControl(completed,gameplayCategories.length);
  console.log("PLAYER GAMEPLAY: Collection rendered with",gameplayCategories.length,"challenge(s).");
 }
 
@@ -188,16 +247,13 @@ async function playerGameplayStatusPoll(){
   if(typeof shouldAcceptPlayerGameStatus==="function"&&!shouldAcceptPlayerGameStatus(currentPlayerGame.status,game.status))return;
   currentPlayerGame={...currentPlayerGame,...game};if(typeof savePlayerSession==="function")savePlayerSession();
   console.log("PLAYER GAMEPLAY: Game status:",currentPlayerGame.status);
-  if(currentPlayerGame.status==="PLAYING"){
+  if(currentPlayerGame.status==="PLAYING"||currentPlayerGame.status==="SCORING"){
+   /* SCORING is retained as a legacy backend status, but it no longer changes screens. */
    if(playerGameplayPhotoFlowActive()){playerGameplayOpen=true;await gameplayRefreshCategories();return;}
    if(!playerGameplayOpen){playerGameplayOpen=true;await openGameplayCollectionScreen(currentPlayerGame,currentPlayer);}else await gameplayRefreshCategories();return;
   }
-  if(currentPlayerGame.status==="SCORING"){
-   playerGameplayOpen=false;
-   if(typeof openPlayerScoringScreen==="function")await openPlayerScoringScreen(currentPlayerGame,currentPlayer);else if(typeof window.showScreen==="function")window.showScreen("scoringScreen");return;
-  }
   if(currentPlayerGame.status==="VOTING"){
-   playerGameplayOpen=false;
+   playerGameplayOpen=false;gameplayStartVotingBusy=false;
    if(typeof openVoting==="function")await openVoting();else if(typeof openVotingScreen==="function")await openVotingScreen();else if(typeof window.showScreen==="function")window.showScreen("votingScreen");return;
   }
   if(currentPlayerGame.status==="FINISHED"){
@@ -216,7 +272,7 @@ async function openPlayerGameplay(game,player){
  if(!currentPlayerGame||!currentPlayerGame.gameCode||!currentPlayer||!currentPlayer.playerId){console.error("PLAYER GAMEPLAY: Invalid normalised game/player state.");return;}
  if(currentPlayerGame.hostPlayerId&&currentPlayer.playerId===currentPlayerGame.hostPlayerId)currentPlayer.isHost=true;
  if(typeof savePlayerSession==="function")savePlayerSession();
- if(currentPlayerGame.status==="PLAYING"){playerGameplayOpen=true;await openGameplayCollectionScreen(currentPlayerGame,currentPlayer);}
+ if(currentPlayerGame.status==="PLAYING"||currentPlayerGame.status==="SCORING"){playerGameplayOpen=true;await openGameplayCollectionScreen(currentPlayerGame,currentPlayer);}
  startPlayerGameplayStatusPolling();console.log("PLAYER GAMEPLAY: Gameplay initialised.");
 }
 
@@ -229,4 +285,5 @@ window.refreshPlayerCategories=gameplayRefreshCategories;
 window.playerGameplayStatusPoll=playerGameplayStatusPoll;
 window.startPlayerGameplayStatusPolling=startPlayerGameplayStatusPolling;
 window.stopPlayerGameplayStatusPolling=stopPlayerGameplayStatusPolling;
+window.gameplayStartVoting=gameplayStartVoting;
 console.log("PLAYER GAMEPLAY: exports ready:",{openPlayerGame:typeof window.openPlayerGame,openPlayerCollectionScreen:typeof window.openPlayerCollectionScreen,loadPlayerCategories:typeof window.loadPlayerCategories,renderPlayerCategoryCards:typeof window.renderPlayerCategoryCards});
